@@ -22,6 +22,7 @@ include_directories(../crypt)
 include_directories(../../..)
 include_directories(../crypt/micro-ecc-master)
 
+add_compile_options(-Wno-tautological-type-limit-compare)
 
 file(GLOB SELF_TEMP_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} src/*.cc src/*.h)
 source_group(src FILES ${SELF_TEMP_SRC_FILES})

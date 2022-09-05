@@ -60,6 +60,7 @@ source_group(messagequeue FILES ${SELF_TEMP_SRC_FILES})
 list(APPEND SELF_SRC_FILES ${SELF_TEMP_SRC_FILES})
 
  
+add_compile_options(-Wno-tautological-type-limit-compare -Wno-error=user-defined-warnings)
  
 if(MSVC)
     add_definitions(/FI"../projdef.h")

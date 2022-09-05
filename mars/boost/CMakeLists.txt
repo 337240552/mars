@@ -12,6 +12,7 @@ include_directories(..)
 
 add_definitions(-DBOOST_NO_EXCEPTIONS)
 
+add_compile_options(-Wno-tautological-type-limit-compare)
 set(SELF_SRC_FILES
         libs/atomic/src/lockpool.cpp
         libs/date_time/src/gregorian/date_generators.cpp
