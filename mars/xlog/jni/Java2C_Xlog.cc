@@ -1,5 +1,5 @@
-// Tencent is pleased to support the open source community by making Mars available.
-// Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
+// sirius is pleased to support the open source community by making Mars available.
+// Copyright (C) 2016 THL A29 Limited, a sirius company. All rights reserved.
 
 // Licensed under the MIT License (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -27,7 +27,7 @@
 
 extern "C" {
 
-JNIEXPORT jlong JNICALL Java_com_tencent_mars_xlog_Xlog_newXlogInstance(JNIEnv* env, jobject, jobject _log_config) {
+JNIEXPORT jlong JNICALL Java_com_sirius_mars_xlog_Xlog_newXlogInstance(JNIEnv* env, jobject, jobject _log_config) {
     if (NULL == _log_config) {
         xerror2(TSF "logconfig is null");
         return 0;
@@ -82,7 +82,7 @@ JNIEXPORT jlong JNICALL Java_com_tencent_mars_xlog_Xlog_newXlogInstance(JNIEnv* 
     return reinterpret_cast<uintptr_t>(category);
 }
 
-JNIEXPORT jlong JNICALL Java_com_tencent_mars_xlog_Xlog_getXlogInstance(JNIEnv* env, jobject, jstring _nameprefix) {
+JNIEXPORT jlong JNICALL Java_com_sirius_mars_xlog_Xlog_getXlogInstance(JNIEnv* env, jobject, jstring _nameprefix) {
     ScopedJstring nameprefix_jstr(env, _nameprefix);
     mars::comm::XloggerCategory* category = mars::xlog::GetXloggerInstance(nameprefix_jstr.GetChar());
     if (nullptr == category) {
@@ -91,12 +91,12 @@ JNIEXPORT jlong JNICALL Java_com_tencent_mars_xlog_Xlog_getXlogInstance(JNIEnv* 
     return reinterpret_cast<uintptr_t>(category);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_releaseXlogInstance(JNIEnv* env, jobject, jstring _nameprefix) {
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_releaseXlogInstance(JNIEnv* env, jobject, jstring _nameprefix) {
     ScopedJstring nameprefix_jstr(env, _nameprefix);
     mars::xlog::ReleaseXloggerInstance(nameprefix_jstr.GetChar());
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderOpen(JNIEnv* env, jclass clazz, jobject _log_config) {
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_appenderOpen(JNIEnv* env, jclass clazz, jobject _log_config) {
     if (NULL == _log_config) {
         xerror2(TSF "logconfig is null");
         return;
@@ -148,18 +148,18 @@ JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderOpen(JNIEnv* env,
     xlogger_SetLevel((TLogLevel)level);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderClose(JNIEnv* env, jobject) {
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_appenderClose(JNIEnv* env, jobject) {
     mars::xlog::appender_close();
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_appenderFlush(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_appenderFlush(JNIEnv* env,
                                                                      jobject,
                                                                      jlong _log_instance_ptr,
                                                                      jboolean _is_sync) {
     mars::xlog::Flush(_log_instance_ptr, _is_sync);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_logWrite(JNIEnv* env, jclass, jobject _log_info, jstring _log) {
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_logWrite(JNIEnv* env, jclass, jobject _log_info, jstring _log) {
     if (NULL == _log_info || NULL == _log) {
         xerror2(TSF "loginfo or log is null");
         return;
@@ -201,7 +201,7 @@ JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_logWrite(JNIEnv* env, jcl
     xlogger_Write(&xlog_info, log_jst.GetChar());
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_logWrite2(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_logWrite2(JNIEnv* env,
                                                                  jclass,
                                                                  jlong _log_instance_ptr,
                                                                  int _level,
@@ -269,39 +269,39 @@ JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_logWrite2(JNIEnv* env,
     }
 }
 
-JNIEXPORT jint JNICALL Java_com_tencent_mars_xlog_Xlog_getLogLevel(JNIEnv*, jobject, jlong _log_instance_ptr) {
+JNIEXPORT jint JNICALL Java_com_sirius_mars_xlog_Xlog_getLogLevel(JNIEnv*, jobject, jlong _log_instance_ptr) {
     return mars::xlog::GetLevel(_log_instance_ptr);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_setLogLevel(JNIEnv*,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_setLogLevel(JNIEnv*,
                                                                    jobject,
                                                                    jlong _log_instance_ptr,
                                                                    jint _log_level) {
     mars::xlog::SetLevel(_log_instance_ptr, (TLogLevel)_log_level);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_setAppenderMode(JNIEnv*,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_setAppenderMode(JNIEnv*,
                                                                        jobject,
                                                                        jlong _log_instance_ptr,
                                                                        jint _mode) {
     mars::xlog::SetAppenderMode(_log_instance_ptr, (mars::xlog::TAppenderMode)_mode);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_setConsoleLogOpen(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_setConsoleLogOpen(JNIEnv* env,
                                                                          jobject,
                                                                          jlong _log_instance_ptr,
                                                                          jboolean _is_open) {
     mars::xlog::SetConsoleLogOpen(_log_instance_ptr, _is_open);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_setMaxFileSize(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_setMaxFileSize(JNIEnv* env,
                                                                       jobject,
                                                                       jlong _log_instance_ptr,
                                                                       jlong _max_size) {
     mars::xlog::SetMaxFileSize(_log_instance_ptr, _max_size);
 }
 
-JNIEXPORT void JNICALL Java_com_tencent_mars_xlog_Xlog_setMaxAliveTime(JNIEnv* env,
+JNIEXPORT void JNICALL Java_com_sirius_mars_xlog_Xlog_setMaxAliveTime(JNIEnv* env,
                                                                        jobject,
                                                                        jlong _log_instance_ptr,
                                                                        jlong _max_time) {
