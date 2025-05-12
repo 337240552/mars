@@ -37,7 +37,6 @@ source_group(crypt\\micro-ecc-master FILES ${SELF_TEMP_SRC_FILES})
 list(APPEND SELF_SRC_FILES ${SELF_TEMP_SRC_FILES})
 
 
-
 if(MSVC)
     add_definitions(/FI"../../comm/projdef.h")
 

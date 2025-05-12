@@ -23,11 +23,11 @@ if system_is_windows():
 else:
     ANDROID_GENERATOR = ''
 
+# export NDK_ROOT=/Users/mingchunhu/prog/android-sdk-osx/ndk/26.3.11579264/
 try:
-    NDK_ROOT = os.environ['NDK_ROOT']
+    NDK_ROOT = '/Users/mingchunhu/prog/android-sdk-osx/ndk/26.3.11579264/' #os.environ['NDK_ROOT']
 except KeyError as identifier:
     NDK_ROOT = ''
-
 
 BUILD_OUT_PATH = 'cmake_build/Android'
 ANDROID_LIBS_INSTALL_PATH = BUILD_OUT_PATH + '/'
@@ -35,7 +35,8 @@ ANDROID_BUILD_CMD = 'cmake "%s" %s -DANDROID_ABI="%s" ' \
                     '-DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%s/build/cmake/android.toolchain.cmake ' \
                     '-DANDROID_TOOLCHAIN=clang -DANDROID_NDK=%s ' \
                     '-DANDROID_PLATFORM=android-21 ' \
-                    '-DANDROID_STL="c++_shared" ' \
+                    '-DANDROID_STL="c++_static" ' \
+                    '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 ' \
                     '&& cmake --build . %s --config Release -- -j8'
 ANDROID_SYMBOL_PATH = 'libraries/mars_android_sdk/obj/local/'
 ANDROID_LIBS_PATH = 'libraries/mars_android_sdk/libs/'
@@ -122,8 +123,8 @@ def build_android(incremental, arch, target_option=''):
         shutil.copy(f, lib_path)
 
     # copy stl
-    shutil.copy(ANDROID_STL_FILE[arch], symbol_path)
-    shutil.copy(ANDROID_STL_FILE[arch], lib_path)
+    # shutil.copy(ANDROID_STL_FILE[arch], symbol_path)
+    # shutil.copy(ANDROID_STL_FILE[arch], lib_path)
 
 
     #strip
