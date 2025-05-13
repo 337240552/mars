@@ -1,7 +1,7 @@
 // Tencent is pleased to support the open source community by making Mars available.
 // Copyright (C) 2016 THL A29 Limited, a Tencent company. All rights reserved.
 
-// Licensed under the MIT License (the "License"); you may not use this file except in 
+// Licensed under the MIT License (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
 // http://opensource.org/licenses/MIT
 
@@ -18,13 +18,17 @@
 //
 
 #include <exception>
+
+#include "boost/assert/source_location.hpp"
 #include "comm/xlogger/xlogger.h"
 
+namespace mars_boost {
 
-namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
-
-    void throw_exception( std::exception const & e ) {
-        xfatal2(TSF"boost exception:%_", e.what());
-
-    }
+void throw_exception(std::exception const& e) {
+    xfatal2(TSF "boost exception:%_", e.what());
 }
+
+void throw_exception(std::exception const& e, mars_boost::source_location const& loc) {
+    xfatal2(TSF "boost exception:%_ from:%_", e.what(), loc.to_string());
+}
+}  // namespace mars_boost

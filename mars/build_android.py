@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import glob
@@ -23,19 +23,23 @@ if system_is_windows():
 else:
     ANDROID_GENERATOR = ''
 
+# export NDK_ROOT=/Users/mingchunhu/prog/android-sdk-osx/ndk/26.3.11579264/
 try:
-    NDK_ROOT = os.environ['NDK_ROOT']
+    NDK_ROOT = '/Users/mingchunhu/prog/android-sdk-osx/ndk/26.3.11579264/' #os.environ['NDK_ROOT']
 except KeyError as identifier:
     NDK_ROOT = ''
 
-
 BUILD_OUT_PATH = 'cmake_build/Android'
 ANDROID_LIBS_INSTALL_PATH = BUILD_OUT_PATH + '/'
+
+#-Wl,--no-warn-shared-textrel #x86链接问题
+# '-DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC" ' \
 ANDROID_BUILD_CMD = 'cmake "%s" %s -DANDROID_ABI="%s" ' \
                     '-DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%s/build/cmake/android.toolchain.cmake ' \
                     '-DANDROID_TOOLCHAIN=clang -DANDROID_NDK=%s ' \
-                    '-DANDROID_PLATFORM=android-18 ' \
-                    '-DANDROID_STL="c++_shared" ' \
+                    '-DANDROID_PLATFORM=android-21 ' \
+                    '-DANDROID_STL="c++_static" ' \
+                    '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 ' \
                     '&& cmake --build . %s --config Release -- -j8'
 ANDROID_SYMBOL_PATH = 'libraries/mars_android_sdk/obj/local/'
 ANDROID_LIBS_PATH = 'libraries/mars_android_sdk/libs/'
@@ -44,11 +48,11 @@ ANDROID_XLOG_LIBS_PATH = 'libraries/mars_xlog_sdk/libs/'
 
 
 ANDROID_STRIP_FILE = {
-        'armeabi': NDK_ROOT + '/toolchains/arm-linux-androideabi-4.9/prebuilt/%s/bin/arm-linux-androideabi-strip',
-        'armeabi-v7a': NDK_ROOT + '/toolchains/arm-linux-androideabi-4.9/prebuilt/%s/bin/arm-linux-androideabi-strip',
-        'x86': NDK_ROOT + '/toolchains/x86-4.9/prebuilt/%s/bin/i686-linux-android-strip',
-        'arm64-v8a': NDK_ROOT + '/toolchains/aarch64-linux-android-4.9/prebuilt/%s/bin/aarch64-linux-android-strip',
-        'x86_64': NDK_ROOT + '/toolchains/x86_64-4.9/prebuilt/%s/bin/x86_64-linux-android-strip',
+        'armeabi': NDK_ROOT + '/toolchains/llvm/prebuilt/%s/bin/llvm-strip',
+        'armeabi-v7a': NDK_ROOT + '/toolchains/llvm/prebuilt/%s/bin/llvm-strip',
+        'x86': NDK_ROOT + '/toolchains/prebuilt/llvm/%s/bin/i686-linux-android-strip',
+        'arm64-v8a': NDK_ROOT + '/toolchains/llvm/prebuilt/%s/bin/llvm-strip',
+        'x86_64': NDK_ROOT + '/toolchains/llvm/prebuilt/%s/bin/llvm-strip',
          }
 
 
@@ -122,8 +126,8 @@ def build_android(incremental, arch, target_option=''):
         shutil.copy(f, lib_path)
 
     # copy stl
-    shutil.copy(ANDROID_STL_FILE[arch], symbol_path)
-    shutil.copy(ANDROID_STL_FILE[arch], lib_path)
+    # shutil.copy(ANDROID_STL_FILE[arch], symbol_path)
+    # shutil.copy(ANDROID_STL_FILE[arch], lib_path)
 
 
     #strip
@@ -165,8 +169,8 @@ if __name__ == '__main__':
             main(False, archs, tag=sys.argv[1])
             break
         else:
-            archs = {'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'}
-            num = raw_input('Enter menu:\n1. Clean && build mars.\n2. Build incrementally mars.\n3. Clean && build xlog.\n4. Exit\n')
+            archs = {'armeabi-v7a', 'arm64-v8a'} #, 'x86', 'x86_64' 官方openssl编译缺少x86头文件
+            num = input('Enter menu:\n1. Clean && build mars.\n2. Build incrementally mars.\n3. Clean && build xlog.\n4. Exit\n')
             if num == '1':
                 main(False, archs)
                 break
