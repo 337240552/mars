@@ -33,12 +33,13 @@ BUILD_OUT_PATH = 'cmake_build/Android'
 ANDROID_LIBS_INSTALL_PATH = BUILD_OUT_PATH + '/'
 
 #-Wl,--no-warn-shared-textrel #x86链接问题
+# '-DCMAKE_C_FLAGS="-fPIC" -DCMAKE_CXX_FLAGS="-fPIC" ' \
 ANDROID_BUILD_CMD = 'cmake "%s" %s -DANDROID_ABI="%s" ' \
                     '-DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%s/build/cmake/android.toolchain.cmake ' \
                     '-DANDROID_TOOLCHAIN=clang -DANDROID_NDK=%s ' \
                     '-DANDROID_PLATFORM=android-21 ' \
                     '-DANDROID_STL="c++_static" ' \
-                    '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384,--no-warn-shared-textrel ' \
+                    '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384 ' \
                     '&& cmake --build . %s --config Release -- -j8'
 ANDROID_SYMBOL_PATH = 'libraries/mars_android_sdk/obj/local/'
 ANDROID_LIBS_PATH = 'libraries/mars_android_sdk/libs/'
@@ -168,7 +169,7 @@ if __name__ == '__main__':
             main(False, archs, tag=sys.argv[1])
             break
         else:
-            archs = {'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'}
+            archs = {'armeabi-v7a', 'arm64-v8a'} #, 'x86', 'x86_64' 官方openssl编译缺少x86头文件
             num = input('Enter menu:\n1. Clean && build mars.\n2. Build incrementally mars.\n3. Clean && build xlog.\n4. Exit\n')
             if num == '1':
                 main(False, archs)
