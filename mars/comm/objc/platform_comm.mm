@@ -88,13 +88,19 @@ namespace comm {
 NO_DESTROY static std::function<bool(std::string&)> g_new_wifi_id_cb;
 NO_DESTROY static mars::comm::Mutex wifi_id_mutex;
 
-void SetWiFiIdCallBack(std::function<bool(std::string&)> _cb) {
+std::function<bool(std::string&)> SetWiFiIdCallBack(std::function<bool(std::string&)> _cb) {
     mars::comm::ScopedLock lock(wifi_id_mutex);
-    g_new_wifi_id_cb = _cb;
+    std::function<bool(std::string&)> old = g_new_wifi_id_cb;
+    g_new_wifi_id_cb = std::move(_cb);
+    return old;
 }
 void ResetWiFiIdCallBack() {
     mars::comm::ScopedLock lock(wifi_id_mutex);
-    g_new_wifi_id_cb = NULL;
+    g_new_wifi_id_cb = nullptr;
+}
+bool IsWiFiIdCallBackExists() {
+    mars::comm::ScopedLock lock(wifi_id_mutex);
+    return g_new_wifi_id_cb != nullptr;
 }
 
 void FlushReachability() {
@@ -183,15 +189,15 @@ bool getProxyInfo(int& port, std::string& strProxy, const std::string& _host) {
 
 void OnPlatformNetworkChange() {}
 
-int getNetInfo(bool realtime /*=false*/) {
+NetType getNetInfo(bool realtime /*=false*/) {
     xverbose_function();
     SCOPE_POOL();
 
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_WATCH
+#if TARGET_IPHONE_SIMULATOR || TARGET_OS_WATCH || UNITTEST
     return mars::comm::kWifi;
 #endif
 
-    switch (__GetNetworkStatus(realtime ? YES : NO)) {
+    switch (__GetNetworkStatus(realtime)) {
         case NotReachable:
             return mars::comm::kNoNet;
         case ReachableViaWiFi:
@@ -203,31 +209,31 @@ int getNetInfo(bool realtime /*=false*/) {
     }
 }
 
-int getNetTypeForStatistics() {
-    int type = getNetInfo(false);
+NetTypeForStatistics getNetTypeForStatistics() {
+    NetType type = getNetInfo(false);
     if (mars::comm::kWifi == type) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_WIFI;
+        return mars::comm::NetTypeForStatistics::NETTYPE_WIFI;
     }
     if (mars::comm::kNoNet == type) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_NON;
+        return mars::comm::NetTypeForStatistics::NETTYPE_NON;
     }
 
     mars::comm::RadioAccessNetworkInfo rani;
     if (!getCurRadioAccessNetworkInfo(rani)) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_NON;
+        return mars::comm::NetTypeForStatistics::NETTYPE_NON;
     }
 
     if (rani.Is2G()) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_2G;
+        return mars::comm::NetTypeForStatistics::NETTYPE_2G;
     } else if (rani.Is3G()) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_3G;
+        return mars::comm::NetTypeForStatistics::NETTYPE_3G;
     } else if (rani.Is4G()) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_4G;
+        return mars::comm::NetTypeForStatistics::NETTYPE_4G;
     } else if (rani.IsNR()) {
-        return (int)mars::comm::NetTypeForStatistics::NETTYPE_5G;
+        return mars::comm::NetTypeForStatistics::NETTYPE_5G;
     }
 
-    return (int)mars::comm::NetTypeForStatistics::NETTYPE_NON;
+    return mars::comm::NetTypeForStatistics::NETTYPE_NON;
 }
 
 unsigned int getSignal(bool isWifi) {
@@ -248,6 +254,20 @@ bool isNetworkConnected() {
         default:
             return false;
     }
+}
+
+int getNetworkIDLabel(std::string& netInfo) {
+    netInfo = mars::comm::kMarsDefaultNetLabel;
+    int nettype = getNetInfo(false);
+    {
+        mars::comm::ScopedLock lock(wifi_id_mutex);
+        if (g_new_wifi_id_cb && g_new_wifi_id_cb(netInfo) && !netInfo.empty()) {
+            return nettype;
+        }
+    }
+
+    // fallback
+    return getCurrNetLabel(netInfo);
 }
 
 #define SIMULATOR_NET_INFO "SIMULATOR"
@@ -274,37 +294,37 @@ bool getCurWifiInfo(mars::comm::WifiInfo& wifiInfo, bool _force_refresh) {
     wifiInfo.ssid = SIMULATOR_NET_INFO;
     wifiInfo.bssid = SIMULATOR_NET_INFO;
     return true;
-//#elif !TARGET_OS_IPHONE
+// #elif !TARGET_OS_IPHONE
 //
-//    NO_DESTROY static mars::comm::Mutex mutex;
-//    mars::comm::ScopedLock lock(mutex);
+//     NO_DESTROY static mars::comm::Mutex mutex;
+//     mars::comm::ScopedLock lock(mutex);
 //
-//    static float version = 0.0;
+//     static float version = 0.0;
 //
-//    CWInterface* info = nil;
+//     CWInterface* info = nil;
 //
-//    if (version < 0.1) {
-//        version = __GetSystemVersion();
-//    }
+//     if (version < 0.1) {
+//         version = __GetSystemVersion();
+//     }
 //
-//    if (version < 10.10) {
-//        static CWInterface* s_info = [[CWInterface interface] retain];
-//        info = s_info;
-//    } else {
-//        CWWiFiClient* wificlient = [CWWiFiClient sharedWiFiClient];
-//        if (nil != wificlient) info = [wificlient interface];
-//    }
+//     if (version < 10.10) {
+//         static CWInterface* s_info = [[CWInterface interface] retain];
+//         info = s_info;
+//     } else {
+//         CWWiFiClient* wificlient = [CWWiFiClient sharedWiFiClient];
+//         if (nil != wificlient) info = [wificlient interface];
+//     }
 //
-//    if (nil == info) return false;
-//    if (info.ssid != nil) {
-//        const char* ssid = [info.ssid UTF8String];
-//        if (NULL != ssid) wifiInfo.ssid.assign(ssid, strnlen(ssid, 32));
-//        // wifiInfo.bssid = [info.bssid UTF8String];
-//    } else {
-//        wifiInfo.ssid = USE_WIRED;
-//        wifiInfo.bssid = USE_WIRED;
-//    }
-//    return true;
+//     if (nil == info) return false;
+//     if (info.ssid != nil) {
+//         const char* ssid = [info.ssid UTF8String];
+//         if (NULL != ssid) wifiInfo.ssid.assign(ssid, strnlen(ssid, 32));
+//         // wifiInfo.bssid = [info.bssid UTF8String];
+//     } else {
+//         wifiInfo.ssid = USE_WIRED;
+//         wifiInfo.bssid = USE_WIRED;
+//     }
+//     return true;
 //
 #elif TARGET_OS_WATCH
     wifiInfo.ssid = IWATCH_NET_INFO;
@@ -464,7 +484,7 @@ bool getCurSIMInfo(mars::comm::SIMInfo& simInfo, bool /* realtime = false*/) {
 
 #else
 
-bool getCurSIMInfo(SIMInfo& simInfo) { return false; }
+bool getCurSIMInfo(mars::comm::SIMInfo& simInfo, bool /* realtime = false*/) { return false; }
 #endif
 
 bool getAPNInfo(mars::comm::APNInfo& info) {
@@ -539,7 +559,9 @@ int OSVerifyCertificate(const std::string& hostname, const std::vector<std::stri
         CFDataRef dataref =
             CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (const uint8_t*)certschain[i].data(),
                                         certschain[i].size(), kCFAllocatorNull);
-        CFArrayAppendValue(certlist, SecCertificateCreateWithData(nullptr, dataref));
+        SecCertificateRef certref = SecCertificateCreateWithData(nullptr, dataref);
+        CFRelease(dataref);
+        CFArrayAppendValue(certlist, certref);
     }
 
     CFStringRef label = CFStringCreateWithCString(NULL, hostname.c_str(), kCFStringEncodingUTF8);

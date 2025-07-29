@@ -10,9 +10,11 @@
 #include "mars/comm/objc/data_protect_attr.h"
 #endif
 
-#include "mars/baseevent/baseprjevent.h"
 #include "mars/comm/dns/dns.h"
 #include "mars/comm/xlogger/xlogger.h"
+#ifdef ANDROID
+#include "mars/comm/alarm.h"
+#endif
 
 using namespace mars::comm;
 using namespace mars::boot;
@@ -51,7 +53,7 @@ mars::comm::ProxyInfo AppManager::GetProxyInfo(const std::string& _host) {
     }
 
     if (!slproxymutex_.try_lock_for(std::chrono::milliseconds(500))) {
-        return mars::comm::ProxyInfo();
+        return {};
     }
 
     if (slproxycount_ < 3 || 5 * 1000 > gettickspan(slproxytimetick_)) {
@@ -65,7 +67,7 @@ mars::comm::ProxyInfo AppManager::GetProxyInfo(const std::string& _host) {
         return proxy_info_;
     }
 
-    return mars::comm::ProxyInfo();
+    return {};
 }
 
 std::string AppManager::GetAppFilePath() {
@@ -172,6 +174,19 @@ void AppManager::GetProxyInfo(const std::string& _host, uint64_t _timetick) {
     }
 }
 
+void AppManager::__CheckCommSetting(const std::string& key) {
+#ifdef ANDROID
+    xinfo2(TSF "AppConfig CheckCommSetting key:%_", key);
+    if (key == kKeyAlarmStartWakeupLook) {
+        int wakeup = GetConfig<int>(kKeyAlarmStartWakeupLook, kAlarmStartWakeupLook);
+        comm::Alarm::SetStartAlarmWakeLock(wakeup);
+    } else if (key == kKeyAlarmOnWakeupLook) {
+        int wakeup = GetConfig<int>(kKeyAlarmOnWakeupLook, kAlarmOnWakeupLook);
+        comm::Alarm::SetOnAlarmWakeLock(wakeup);
+    }
+#endif
+}
+
 // #if TARGET_OS_IPHONE
 void AppManager::ClearProxyInfo() {
     std::lock_guard<std::timed_mutex> lock(slproxymutex_);
@@ -181,6 +196,12 @@ void AppManager::ClearProxyInfo() {
     proxy_info_.type = mars::comm::kProxyNone;
 }
 // #endif
+
+AppManager* GetDefaultAppManager() {
+    auto* context = mars::boot::Context::CreateContext("default");
+    auto* manager = context->GetManager<mars::app::AppManager>();
+    return manager;
+}
 
 }  // namespace app
 }  // namespace mars

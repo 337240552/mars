@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "mars/comm/autobuffer.h"
-#include "mars/comm/projdef.h"
 
 namespace mars {
 namespace stn {
@@ -141,21 +140,45 @@ struct Task {
     unsigned short client_sequence_id;  // 用于与后台上报对应的sequence id.
     unsigned short server_sequence_id;
     bool need_realtime_netinfo;  // need realtime net info. for network-cross checking
+
+    // 解析host时透传回给使用方
+    std::map<std::string, std::string> extra_info;
 };
 
 struct CgiProfile {
+    //.所有time字段均为tickcount.
     uint64_t start_time = 0;
     uint64_t start_connect_time = 0;
     uint64_t connect_successful_time = 0;
     uint64_t start_tls_handshake_time = 0;
     uint64_t tls_handshake_successful_time = 0;
-    uint64_t start_send_packet_time = 0;
-    uint64_t start_read_packet_time = 0;
-    uint64_t read_packet_finished_time = 0;
+    uint64_t start_send_packet_time = 0;       // 首次发送请求(send)
+    uint64_t send_packet_finished_time = 0;    // 发送请求完成(send)
+    uint64_t start_read_packet_time = 0;       // 首次接收数据(recv)
+    uint64_t read_packet_finished_time = 0;    // 接收数据(recv)完成
+    uint64_t start_encode_packet_time = 0;     // 开始(req2buf)打包
+    uint64_t encode_packet_finished_time = 0;  // 打包(req2buf)完成
+    uint64_t start_decode_packet_time = 0;     // 开始(buf2resp)解包
+    uint64_t decode_packet_finished_time = 0;  // 解包(buf2resp)完成
+
     int channel_type = 0;
     int transport_protocol = 0;
     int rtt = 0;
     std::string nettype;
+};
+
+struct ConnectCtrl {
+    int from_source = 0;  // DEFAULT;
+    unsigned interval_ms = 2500;
+    unsigned ipv4_timeout_ms = 10 * 1000;
+    unsigned ipv6_timeout_ms = 10 * 1000;
+    unsigned maxconn = 3;
+    unsigned ipv4_zerortt_check_ms = 300;
+    unsigned ipv6_zerortt_check_ms = 400;
+};
+struct ConnectPorts {
+    int from_source = 0;  // DEFAULT;
+    std::vector<uint16_t> ports;
 };
 
 struct LonglinkConfig {
@@ -180,7 +203,10 @@ struct LonglinkConfig {
     bool isMain;
     int link_type = Task::kChannelLong;
     int packer_encoder_version = PackerEncoderVersion::kOld;
-    std::vector<std::string> (*dns_func)(const std::string& _host, bool _longlink_host);
+    std::string packer_encoder_name = "";
+    std::vector<std::string> (*dns_func)(const std::string& _host,
+                                         bool _longlink_host,
+                                         const std::map<std::string, std::string>& _extra_info);
     bool need_tls;
 };
 
@@ -192,12 +218,14 @@ struct QuicParameters {
 };
 struct ShortlinkConfig {
  public:
-    ShortlinkConfig(bool _use_proxy, bool _use_tls) : use_proxy(_use_proxy), use_tls(_use_tls) {
+    ShortlinkConfig(bool _use_proxy, bool _use_tls, std::string _tls_group)
+    : use_proxy(_use_proxy), use_tls(_use_tls), tls_group(_tls_group) {
     }
     bool use_proxy = false;
     bool use_tls = true;
     bool use_quic = false;
     QuicParameters quic;
+    std::string tls_group;
 };
 
 enum TaskFailHandleType {
@@ -378,6 +406,7 @@ struct IPPortItem {
     IPSourceType source_type;
     std::string str_host;
     int transport_protocol = Task::kTransportProtocolTCP;  // tcp or quic?
+    unsigned from_source = 0;                              // default
 };
 
 /* mars2
@@ -385,7 +414,7 @@ struct IPPortItem {
 extern bool MakesureAuthed(const std::string& _host, const std::string& _user_id);
 
 //流量统计
-extern void TrafficData(ssize_t _send, ssize_t _recv);
+extern void TrafficData(int64_t _send, int64_t _recv);
 
 //底层询问上层该host对应的ip列表
 extern std::vector<std::string> OnNewDns(const std::string& _host, bool _longlink_host);
@@ -440,7 +469,7 @@ class Callback {
     virtual bool MakesureAuthed(const std::string& _host, const std::string& _user_id) = 0;
 
     // 流量统计
-    virtual void TrafficData(ssize_t _send, ssize_t _recv) = 0;
+    virtual void TrafficData(int64_t _send, int64_t _recv) = 0;
 
     // 底层询问上层该host对应的ip列表
     virtual std::vector<std::string> OnNewDns(const std::string& host, bool _longlink_host) = 0;
@@ -459,7 +488,7 @@ class Callback {
                          int& error_code,
                          const int channel_select,
                          const std::string& host,
-                         const unsigned short client_sequence_id) = 0;
+                         const uint16_t client_sequence_id) = 0;
     // 底层回包返回给上层解析
     virtual int Buf2Resp(uint32_t _taskid,
                          void* const _user_context,
@@ -467,8 +496,9 @@ class Callback {
                          const AutoBuffer& _inbuffer,
                          const AutoBuffer& _extend,
                          int& _error_code,
+                         uint64_t& _flags,
                          const int _channel_select,
-                         unsigned short& server_sequence_id) = 0;
+                         uint16_t& server_sequence_id) = 0;
     // 任务执行结束
     virtual int OnTaskEnd(uint32_t _taskid,
                           void* const _user_context,

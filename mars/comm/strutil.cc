@@ -30,7 +30,7 @@
 #include <locale>
 
 #include "comm/xlogger/xlogger.h"
-#include "mars/openssl/include/openssl/md5.h"
+#include "openssl/md5.h"
 
 #ifdef WIN32
 #define snprintf _snprintf
@@ -57,6 +57,12 @@ std::string& URLEncode(const std::string& _url, std::string& _encode_url) {
     }
 
     return _encode_url;
+}
+
+std::string URLEncode(const std::string& _url) {
+    std::string encode_url;
+    URLEncode(_url, encode_url);
+    return encode_url;
 }
 
 #define TRIMLEFT(T)                              \
@@ -237,7 +243,7 @@ std::string Str2Hex(const char* _str, unsigned int _len) {
         return "";
     }
     char outbuffer[512 + 1];
-    
+
     unsigned int outoffset = 0;
     const char* ptr = _str;
     unsigned int length = _len / 2;
@@ -260,11 +266,11 @@ std::string Str2Hex(const char* _str, unsigned int _len) {
     return ret;
 }
 
-std::string Hex2Str(const std::string &hex) {
+std::string Hex2Str(const std::string& hex) {
     return Hex2Str(hex.data(), hex.size());
 }
 
-std::string Str2Hex(const std::string &str) {
+std::string Str2Hex(const std::string& str) {
     return Str2Hex(str.data(), str.size());
 }
 
@@ -323,6 +329,16 @@ size_t ci_find_substr(const std::string& str, const std::string& sub, size_t pos
         return std::string::npos;  // not found
 }
 
+std::string BufferMD5(const std::string &buf) {
+    return BufferMD5(buf.data(), buf.size());
+}
+
+std::string BufferMD5(const void* buffer, size_t size) {
+    uint8_t md5[MD5_DIGEST_LENGTH] = {0};
+    MD5(static_cast<const unsigned char*>(buffer), static_cast<unsigned int>(size), md5);
+    return strutil::MD5DigestToBase16(md5);
+}
+
 std::string MD5DigestToBase16(const uint8_t digest[16]) {
     return DigestToBase16(&digest[0], 16);
 }
@@ -340,6 +356,52 @@ std::string DigestToBase16(const uint8_t* digest, size_t length) {
         ret[j + 1] = zEncode[a & 0xf];
     }
     return ret;
+}
+
+std::string CStr2StringSafe(const char* a) {
+    if (a == nullptr) {
+        return {};
+    }
+    return a;
+}
+bool CStrNullOrEmpty(const char* a) {
+    return a == nullptr || std::string(a).empty();
+}
+bool CStrCmpSafe(const char* a, const char* b) {
+    if (a == nullptr || b == nullptr) {
+        return false;
+    }
+    return strcmp(a, b) == 0;
+}
+int32_t CStr2Int32Safe(const char* a, int32_t default_num) {
+    if (a == nullptr) {
+        return default_num;
+    }
+    return atoi(a);
+}
+
+void to_lower(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
+}
+
+void to_upper(std::string& str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+}
+
+std::string cast_lower(const std::string& str) {
+    std::string s = str;
+    to_lower(s);
+    return s;
+}
+
+std::string cast_upper(const std::string& str) {
+    std::string s = str;
+    to_upper(s);
+    return s;
 }
 
 }  // namespace strutil

@@ -76,7 +76,7 @@ enum {
 
 static unsigned long const sg_interval[][5] = {
     {5, 10, 20, 30, 300},
-    {15, 30, 240, 300, 600},
+    {15, 30, 120, 300, 600},
     {0, 0, 0, 0, 0},
 };
 
@@ -187,7 +187,8 @@ LongLinkConnectMonitor::LongLinkConnectMonitor(boot::Context* _context,
 , is_keep_alive_(_is_keep_alive)
 , current_interval_index_(0)
 , rebuild_longlink_(false)
-, net_source_(_net_source) {
+, net_source_(_net_source)
+, is_released_(false) {
     xinfo2(TSF "handler:(%_,%_)", asyncreg_.Get().queue, asyncreg_.Get().seq);
     if (is_keep_alive_) {
         activelogic_.SignalActive.connect(
@@ -207,6 +208,8 @@ LongLinkConnectMonitor::LongLinkConnectMonitor(boot::Context* _context,
 
 LongLinkConnectMonitor::~LongLinkConnectMonitor() {
     xinfo_function();
+    is_released_ = true;
+    ScopedLock lock(mutex_);
 #ifdef __APPLE__
     __StopTimer();
 #endif
@@ -377,6 +380,11 @@ uint64_t LongLinkConnectMonitor::__AutoIntervalConnect() {
 
 void LongLinkConnectMonitor::__OnSignalForeground(bool _isForeground) {
     ASYNC_BLOCK_START
+    if (is_released_)
+        return;
+    ScopedLock lock(mutex_);
+    if (is_released_)
+        return;
     if (longlink_.IsSvrTrigOff()) {
         xinfo2(TSF "server trig off");
         return;
@@ -405,6 +413,11 @@ void LongLinkConnectMonitor::__OnSignalForeground(bool _isForeground) {
 
 void LongLinkConnectMonitor::__OnSignalActive(bool _isactive) {
     ASYNC_BLOCK_START
+    if (is_released_)
+        return;
+    ScopedLock lock(mutex_);
+    if (is_released_)
+        return;
     if (longlink_.IsSvrTrigOff()) {
         xinfo2(TSF "server trig off");
         return;
@@ -415,6 +428,11 @@ void LongLinkConnectMonitor::__OnSignalActive(bool _isactive) {
 
 void LongLinkConnectMonitor::__OnLongLinkStatuChanged(LongLink::TLongLinkStatus _status,
                                                       const std::string& _channel_id) {
+    if (is_released_)
+        return;
+    ScopedLock lock(mutex_);
+    if (is_released_)
+        return;
     xinfo2(TSF "longlink status change: %_ ", _status);
     if (longlink_.IsSvrTrigOff()) {
         xinfo2(TSF "server trig off");

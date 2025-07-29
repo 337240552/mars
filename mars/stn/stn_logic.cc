@@ -102,6 +102,14 @@ static void onInitConfigBeforeOnCreate(int _packer_encoder_version) {
     // xinfo2(TSF"mars2 onInitConfigBeforeOnCreate finish.");
 }
 
+static void onInitConfigBeforeOnCreateV2(int _packer_encoder_version, std::string _pack_encoder_name) {
+    StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
+    xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
+    if (stn_manager) {
+        stn_manager->OnInitConfigBeforeOnCreateV2(_packer_encoder_version, _pack_encoder_name);
+    }
+}
+
 static void onCreate() {
     /* mars2
 #if !UWP && !defined(WIN32)
@@ -170,7 +178,7 @@ static void onNetworkChange(void (*pre_change)()) {
     }
 }
 
-static void OnNetworkDataChange(const char* _tag, ssize_t _send, ssize_t _recv) {
+static void OnNetworkDataChange(const char* _tag, int64_t _send, int64_t _recv) {
     /* mars2
     if (NULL == _tag || strnlen(_tag, 1024) == 0) {
         xassert2(false);
@@ -212,7 +220,8 @@ static void __initbind_baseprjevent() {
     GetSignalOnAlarm().connect(&onAlarm);
 #endif
     GetSignalOnCreate().connect(&onCreate);
-    GetSignalOnInitBeforeOnCreate().connect(boost::bind(&onInitConfigBeforeOnCreate, boost::placeholders::_1));
+    GetSignalOnInitBeforeOnCreate().connect(boost::bind(&onInitConfigBeforeOnCreate, _1));
+    GetSignalOnInitBeforeOnCreateV2().connect(boost::bind(&onInitConfigBeforeOnCreateV2, _1, _2));
     GetSignalOnDestroy().connect(1, &onDestroy);  // low priority signal func
     GetSignalOnSingalCrash().connect(&onSingalCrash);
     GetSignalOnExceptionCrash().connect(&onExceptionCrash);
@@ -323,20 +332,23 @@ void (*Reset)() = []() {
     }
 };
 
-void (*ResetAndInitEncoderVersion)(int _packer_encoder_version) = [](int _packer_encoder_version) {
-    /* mars2
-        xinfo2(TSF "stn reset, encoder version: %_", _packer_encoder_version);
-    LongLinkEncoder::SetEncoderVersion(_packer_encoder_version);
-        NetCore::Singleton::Release();
-        NetCore::Singleton::Instance();
-    */
-    xinfo2(TSF "mars2 Reset stn_logic ResetAndInitEncoderVersion");
-    StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
-    xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
-    if (stn_manager) {
-        stn_manager->ResetAndInitEncoderVersion(_packer_encoder_version);
-    }
-};
+void (*ResetAndInitEncoderVersion)(int _packer_encoder_version, std::string _packer_encoder_name) =
+    [](int _packer_encoder_version, std::string _packer_encoder_name) {
+        /* mars2
+            xinfo2(TSF "stn reset, encoder version: %_", _packer_encoder_version);
+        LongLinkEncoder::SetEncoderVersion(_packer_encoder_version);
+            NetCore::Singleton::Release();
+            NetCore::Singleton::Instance();
+        */
+        xinfo2(TSF "mars2 ResetAndInitEncoderVersion _packer_encoder_version:%_ _packer_encoder_hame:%_",
+               _packer_encoder_version,
+               _packer_encoder_name);
+        StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
+        xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
+        if (stn_manager) {
+            stn_manager->ResetAndInitEncoderVersion(_packer_encoder_version, _packer_encoder_name);
+        }
+    };
 
 void (*MakesureLonglinkConnected)() = []() {
     /* mars2
@@ -570,8 +582,8 @@ bool MakesureAuthed(const std::string& _host, const std::string& _user_id) {
     return false;
 }
 
-// 流量统计
-void TrafficData(ssize_t _send, ssize_t _recv) {
+//流量统计
+void TrafficData(int64_t _send, int64_t _recv) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
     if (stn_manager) {
@@ -579,16 +591,18 @@ void TrafficData(ssize_t _send, ssize_t _recv) {
     }
 }
 
-// 底层询问上层该host对应的ip列表
-std::vector<std::string> OnNewDns(const std::string& _host, bool _longlink_host) {
+//底层询问上层该host对应的ip列表
+std::vector<std::string> OnNewDns(const std::string& _host,
+                                  bool _longlink_host,
+                                  const std::map<std::string, std::string>& _extra_info) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
     if (stn_manager) {
-        return stn_manager->OnNewDns(_host, _longlink_host);
+        return stn_manager->OnNewDns(_host, _longlink_host, _extra_info);
     }
     return std::vector<std::string>();
 }
-// 网络层收到push消息回调
+//网络层收到push消息回调
 void OnPush(const std::string& _channel_id,
             uint32_t _cmdid,
             uint32_t _taskid,
@@ -601,7 +615,7 @@ void OnPush(const std::string& _channel_id,
         stn_manager->OnPush(_channel_id, _cmdid, _taskid, _body, _extend);
     }
 }
-// 底层获取task要发送的数据
+//底层获取task要发送的数据
 bool Req2Buf(uint32_t taskid,
              void* const user_context,
              const std::string& _user_id,
@@ -627,13 +641,14 @@ bool Req2Buf(uint32_t taskid,
     }
     return false;
 }
-// 底层回包返回给上层解析
+//底层回包返回给上层解析
 int Buf2Resp(uint32_t taskid,
              void* const user_context,
              const std::string& _user_id,
              const AutoBuffer& inbuffer,
              const AutoBuffer& extend,
              int& error_code,
+             uint64_t& flags,
              const int channel_select,
              unsigned short& server_sequence_id) {
     xdebug2(TSF "mars2 Buf2Resp");
@@ -646,12 +661,13 @@ int Buf2Resp(uint32_t taskid,
                                      inbuffer,
                                      extend,
                                      error_code,
+                                     flags,
                                      channel_select,
                                      server_sequence_id);
     }
     return 0;
 }
-// 任务执行结束
+//任务执行结束
 int OnTaskEnd(uint32_t taskid,
               void* const user_context,
               const std::string& _user_id,
@@ -667,7 +683,7 @@ int OnTaskEnd(uint32_t taskid,
     return 0;
 }
 
-// 上报网络连接状态
+//上报网络连接状态
 void ReportConnectStatus(int status, int longlink_status) {
     xverbose_function(TSF "mars2");
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
@@ -704,7 +720,7 @@ void OnLongLinkStatusChange(int _status) {
         stn_manager->OnLongLinkStatusChange(_status);
     }
 }
-// 长连信令校验 ECHECK_NOW = 0, ECHECK_NEVER = 1, ECHECK_NEXT = 2
+//长连信令校验 ECHECK_NOW = 0, ECHECK_NEVER = 1, ECHECK_NEXT = 2
 int GetLonglinkIdentifyCheckBuffer(const std::string& _channel_id,
                                    AutoBuffer& identify_buffer,
                                    AutoBuffer& buffer_hash,
@@ -716,7 +732,7 @@ int GetLonglinkIdentifyCheckBuffer(const std::string& _channel_id,
     }
     return 0;
 }
-// 长连信令校验回包
+//长连信令校验回包
 bool OnLonglinkIdentifyResponse(const std::string& _channel_id,
                                 const AutoBuffer& response_buffer,
                                 const AutoBuffer& identify_buffer_hash) {
@@ -735,9 +751,9 @@ void RequestSync() {
         stn_manager->RequestSync();
     }
 }
-// 验证是否已登录
+//验证是否已登录
 
-// 底层询问上层http网络检查的域名列表
+//底层询问上层http网络检查的域名列表
 void RequestNetCheckShortLinkHosts(std::vector<std::string>& _hostlist) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
@@ -745,7 +761,7 @@ void RequestNetCheckShortLinkHosts(std::vector<std::string>& _hostlist) {
         stn_manager->RequestNetCheckShortLinkHosts(_hostlist);
     }
 }
-// 底层向上层上报cgi执行结果
+//底层向上层上报cgi执行结果
 void ReportTaskProfile(const TaskProfile& _task_profile) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
@@ -753,7 +769,7 @@ void ReportTaskProfile(const TaskProfile& _task_profile) {
         stn_manager->ReportTaskProfile(_task_profile);
     }
 }
-// 底层通知上层cgi命中限制
+//底层通知上层cgi命中限制
 void ReportTaskLimited(int _check_type, const Task& _task, unsigned int& _param) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
@@ -761,7 +777,7 @@ void ReportTaskLimited(int _check_type, const Task& _task, unsigned int& _param)
         stn_manager->ReportTaskLimited(_check_type, _task, _param);
     }
 }
-// 底层上报域名dns结果
+//底层上报域名dns结果
 void ReportDnsProfile(const DnsProfile& _dns_profile) {
     StnManager* stn_manager = Context::CreateContext("default")->GetManager<StnManager>();
     xassert2(NULL != stn_manager, "mars2 stn_manager is empty.");
