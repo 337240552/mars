@@ -67,7 +67,6 @@ file(GLOB SELF_TEMP_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} messagequeue/*.cc m
 source_group(messagequeue FILES ${SELF_TEMP_SRC_FILES})
 list(APPEND SELF_SRC_FILES ${SELF_TEMP_SRC_FILES})
  
-#add_compile_options(-Wno-tautological-type-limit-compare -Wno-error=user-defined-warnings)
 
 file(GLOB SELF_TEMP_SRC_FILES RELATIVE ${PROJECT_SOURCE_DIR} owl/mpl/*.cc owl/mpl/*.h)
 source_group(owl FILES ${SELF_TEMP_SRC_FILES})
@@ -142,7 +141,7 @@ elseif(UNIX)
     list(APPEND SELF_SRC_FILES ${SELF_TEMP_SRC_FILES})
 endif()
 
-
+add_definitions(-Wno-deprecated-builtins -Wno-deprecated-declarations)
 BuildWithUnitTest("${PROJECT_NAME}" "${SELF_SRC_FILES}")
     
     

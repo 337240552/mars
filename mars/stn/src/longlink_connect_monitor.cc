@@ -191,14 +191,10 @@ LongLinkConnectMonitor::LongLinkConnectMonitor(boot::Context* _context,
 , is_released_(false) {
     xinfo2(TSF "handler:(%_,%_)", asyncreg_.Get().queue, asyncreg_.Get().seq);
     if (is_keep_alive_) {
-        activelogic_.SignalActive.connect(
-            boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, boost::placeholders::_1));
-        activelogic_.SignalForeground.connect(
-            boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, boost::placeholders::_1));
-        longlink_.SignalConnection.connect(boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged,
-                                                       this,
-                                                       boost::placeholders::_1,
-                                                       boost::placeholders::_2));
+        activelogic_.SignalActive.connect(boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, _1));
+        activelogic_.SignalForeground.connect(boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, _1));
+        longlink_.SignalConnection.connect(
+            boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged, this, _1, _2));
     }
 #ifdef __ANDROID__
     rebuild_alarm_.SetType(kAlarmType);
@@ -213,28 +209,19 @@ LongLinkConnectMonitor::~LongLinkConnectMonitor() {
 #ifdef __APPLE__
     __StopTimer();
 #endif
-    longlink_.SignalConnection.disconnect(boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged,
-                                                      this,
-                                                      boost::placeholders::_1,
-                                                      boost::placeholders::_2));
-    activelogic_.SignalForeground.disconnect(
-        boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, boost::placeholders::_1));
-    activelogic_.SignalActive.disconnect(
-        boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, boost::placeholders::_1));
+    longlink_.SignalConnection.disconnect(boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged, this, _1, _2));
+    activelogic_.SignalForeground.disconnect(boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, _1));
+    activelogic_.SignalActive.disconnect(boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, _1));
 
     asyncreg_.CancelAndWait();
 }
 
 void LongLinkConnectMonitor::DisconnectAllSlot() {
     if (is_keep_alive_) {
-        longlink_.SignalConnection.disconnect(boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged,
-                                                          this,
-                                                          boost::placeholders::_1,
-                                                          boost::placeholders::_2));
-        activelogic_.SignalForeground.disconnect(
-            boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, boost::placeholders::_1));
-        activelogic_.SignalActive.disconnect(
-            boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, boost::placeholders::_1));
+        longlink_.SignalConnection.disconnect(
+            boost::bind(&LongLinkConnectMonitor::__OnLongLinkStatuChanged, this, _1, _2));
+        activelogic_.SignalForeground.disconnect(boost::bind(&LongLinkConnectMonitor::__OnSignalForeground, this, _1));
+        activelogic_.SignalActive.disconnect(boost::bind(&LongLinkConnectMonitor::__OnSignalActive, this, _1));
     }
 }
 

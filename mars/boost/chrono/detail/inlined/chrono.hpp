@@ -9,13 +9,11 @@
 #ifndef BOOST_CHRONO_DETAIL_INLINED_CHRONO_HPP
 #define BOOST_CHRONO_DETAIL_INLINED_CHRONO_HPP
 
-#include <boost/chrono/chrono.hpp>
 #include <boost/version.hpp>
-#if defined BOOST_CHRONO_PROVIDE_HYBRID_ERROR_HANDLING
+#include <boost/chrono/chrono.hpp>
 #include <boost/system/system_error.hpp>
-#endif
-#include <boost/chrono/detail/system.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/chrono/detail/system.hpp>
 
 //----------------------------------------------------------------------------//
 //                                                                            //

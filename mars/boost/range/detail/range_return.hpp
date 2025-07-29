@@ -9,7 +9,6 @@
 #ifndef BOOST_RANGE_DETAIL_RANGE_RETURN_HPP_INCLUDED
 #define BOOST_RANGE_DETAIL_RANGE_RETURN_HPP_INCLUDED
 
-#include <boost/next_prior.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -90,7 +89,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         static type pack(BOOST_DEDUCED_TYPENAME range_iterator<SinglePassRange>::type found,
                          SinglePassRange& rng)
         {
-            return type(mars_boost::begin(rng), found);
+            return type(boost::begin(rng), found);
         }
     };
 
@@ -103,7 +102,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         static type pack(BOOST_DEDUCED_TYPENAME range_iterator<SinglePassRange>::type found,
                          SinglePassRange& rng)
         {
-            return type( mars_boost::begin(rng), 
+            return type( mars_boost::begin(rng),
                          found == mars_boost::end(rng) ? found : mars_boost::next(found) );
         }
     };
@@ -172,7 +171,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         static type pack(BOOST_DEDUCED_TYPENAME range_iterator<SinglePassRange>::type,
                          SinglePassRange& rng)
         {
-            return type(mars_boost::begin(rng), mars_boost::end(rng));
+            return type(boost::begin(rng), mars_boost::end(rng));
         }
     };
 

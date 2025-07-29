@@ -57,14 +57,21 @@
 
    #include <boost/move/detail/type_traits.hpp>
 
-   #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) reinterpret_cast<RV_TYPE>(ARG)
-   #define BOOST_MOVE_TO_LV_CAST(LV_TYPE, ARG) static_cast<LV_TYPE>(ARG)
+   #if defined(BOOST_MOVE_ADDRESS_SANITIZER_ON)
+      #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) reinterpret_cast<RV_TYPE>(ARG)
+   #else
+      #define BOOST_MOVE_TO_RV_CAST(RV_TYPE, ARG) static_cast<RV_TYPE>(ARG)
+   #endif
 
    //Move emulation rv breaks standard aliasing rules so add workarounds for some compilers
-   #if defined(BOOST_GCC) && (BOOST_GCC >= 40400) && (BOOST_GCC < 40500)
-   #define BOOST_RV_ATTRIBUTE_MAY_ALIAS BOOST_MAY_ALIAS
+   #if defined(__GNUC__) && (__GNUC__ >= 4) && \
+      (\
+         defined(BOOST_GCC) ||   \
+         (defined(BOOST_INTEL) && (BOOST_INTEL_CXX_VERSION >= 1300)) \
+      )
+      #define BOOST_MOVE_ATTRIBUTE_MAY_ALIAS __attribute__((__may_alias__))
    #else
-   #define BOOST_RV_ATTRIBUTE_MAY_ALIAS 
+      #define BOOST_MOVE_ATTRIBUTE_MAY_ALIAS
    #endif
 
    namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
@@ -75,7 +82,7 @@
    //
    //////////////////////////////////////////////////////////////////////////////
    template <class T>
-   class BOOST_RV_ATTRIBUTE_MAY_ALIAS rv
+   class rv
       : public ::mars_boost::move_detail::if_c
          < ::mars_boost::move_detail::is_class<T>::value
          , T
@@ -86,7 +93,7 @@
       ~rv() throw();
       rv(rv const&);
       void operator=(rv const&);
-   };
+   } BOOST_MOVE_ATTRIBUTE_MAY_ALIAS;
 
 
    //////////////////////////////////////////////////////////////////////////////
@@ -190,7 +197,7 @@
    namespace move_detail {
 
    template <class Ret, class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       <  ::mars_boost::move_detail::is_lvalue_reference<Ret>::value ||
         !::mars_boost::has_move_emulation_enabled<T>::value
       , T&>::type
@@ -200,7 +207,7 @@
    }
 
    template <class Ret, class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < !::mars_boost::move_detail::is_lvalue_reference<Ret>::value &&
          ::mars_boost::has_move_emulation_enabled<T>::value
       , ::mars_boost::rv<T>&>::type
@@ -210,7 +217,7 @@
    }
 
    template <class Ret, class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < !::mars_boost::move_detail::is_lvalue_reference<Ret>::value &&
          ::mars_boost::has_move_emulation_enabled<T>::value
       , ::mars_boost::rv<T>&>::type
@@ -218,10 +225,6 @@
    {
       return x;
    }
-
-   template <class T>
-   BOOST_MOVE_FORCEINLINE T& unrv(::mars_boost::rv<T> &rv) BOOST_NOEXCEPT
-   {  return BOOST_MOVE_TO_LV_CAST(T&, rv);   }
 
    }  //namespace move_detail {
    }  //namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
@@ -234,11 +237,6 @@
       ::mars_boost::move((BASE_TYPE&)(ARG))
    //
 
-   #define BOOST_MOVE_TO_LV(ARG) \
-      ::mars_boost::move_detail::unrv(ARG)
-   //
-
-
    //////////////////////////////////////////////////////////////////////////////
    //
    //                         BOOST_MOVABLE_BUT_NOT_COPYABLE
@@ -247,9 +245,9 @@
    #define BOOST_MOVABLE_BUT_NOT_COPYABLE(TYPE)\
       BOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE)\
       public:\
-      BOOST_MOVE_FORCEINLINE operator ::mars_boost::rv<TYPE>&() \
+      operator ::mars_boost::rv<TYPE>&() \
       {  return *BOOST_MOVE_TO_RV_CAST(::mars_boost::rv<TYPE>*, this);  }\
-      BOOST_MOVE_FORCEINLINE operator const ::mars_boost::rv<TYPE>&() const \
+      operator const ::mars_boost::rv<TYPE>&() const \
       {  return *BOOST_MOVE_TO_RV_CAST(const ::mars_boost::rv<TYPE>*, this);  }\
       private:\
    //
@@ -262,21 +260,21 @@
 
    #define BOOST_COPYABLE_AND_MOVABLE(TYPE)\
       public:\
-      BOOST_MOVE_FORCEINLINE TYPE& operator=(TYPE &t)\
-      {  this->operator=(const_cast<const TYPE&>(t)); return *this;}\
+      TYPE& operator=(TYPE &t)\
+      {  this->operator=(const_cast<const TYPE &>(t)); return *this;}\
       public:\
-      BOOST_MOVE_FORCEINLINE operator ::mars_boost::rv<TYPE>&() \
+      operator ::mars_boost::rv<TYPE>&() \
       {  return *BOOST_MOVE_TO_RV_CAST(::mars_boost::rv<TYPE>*, this);  }\
-      BOOST_MOVE_FORCEINLINE operator const ::mars_boost::rv<TYPE>&() const \
+      operator const ::mars_boost::rv<TYPE>&() const \
       {  return *BOOST_MOVE_TO_RV_CAST(const ::mars_boost::rv<TYPE>*, this);  }\
       private:\
    //
 
    #define BOOST_COPYABLE_AND_MOVABLE_ALT(TYPE)\
       public:\
-      BOOST_MOVE_FORCEINLINE operator ::mars_boost::rv<TYPE>&() \
+      operator ::mars_boost::rv<TYPE>&() \
       {  return *BOOST_MOVE_TO_RV_CAST(::mars_boost::rv<TYPE>*, this);  }\
-      BOOST_MOVE_FORCEINLINE operator const ::mars_boost::rv<TYPE>&() const \
+      operator const ::mars_boost::rv<TYPE>&() const \
       {  return *BOOST_MOVE_TO_RV_CAST(const ::mars_boost::rv<TYPE>*, this);  }\
       private:\
    //
@@ -303,7 +301,6 @@
       BOOST_MOVE_IMPL_NO_COPY_CTOR_OR_ASSIGN(TYPE)\
       public:\
       typedef int boost_move_emulation_t;\
-      private:\
    //
 
    //! This macro marks a type as copyable and movable.
@@ -453,7 +450,7 @@
       namespace move_detail {
 
       template <class Ret, class T>
-      BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+      inline typename ::mars_boost::move_detail::enable_if_c
          <  ::mars_boost::move_detail::is_lvalue_reference<Ret>::value
          , T&>::type
             move_return(T& x) BOOST_NOEXCEPT
@@ -462,7 +459,7 @@
       }
 
       template <class Ret, class T>
-      BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+      inline typename ::mars_boost::move_detail::enable_if_c
          < !::mars_boost::move_detail::is_lvalue_reference<Ret>::value
          , Ret && >::type
             move_return(T&& t) BOOST_NOEXCEPT
@@ -488,17 +485,6 @@
    //!a base type is implicit.
    #define BOOST_MOVE_BASE(BASE_TYPE, ARG) \
       ::mars_boost::move((BASE_TYPE&)(ARG))
-   //
-
-   //!This macro is used to achieve portable optimal move constructors.
-   //!
-   //!In C++03 mode, when accessing a member of type through a rvalue (implemented as a `rv<T> &` type, where rv<T> derives
-   //!from T) triggers a potential UB as the program never creates objects of type rv<T>. This macro casts back `rv<T>` to
-   //!`T&` so that access to member types are done through the original type.
-   //! 
-   //!In C++11 compilers the cast from a rvalue reference of a derived type to a rvalue reference of
-   //!a base type is implicit, so it's a no-op.
-   #define BOOST_MOVE_TO_LV(ARG) ARG
    //
 
    namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {

@@ -11,7 +11,6 @@
 #ifndef BOOST_SIGNALS2_LAST_VALUE_HPP
 #define BOOST_SIGNALS2_LAST_VALUE_HPP
 
-#include <boost/core/no_exceptions_support.hpp>
 #include <boost/optional.hpp>
 #include <boost/signals2/expired_slot.hpp>
 #include <boost/throw_exception.hpp>

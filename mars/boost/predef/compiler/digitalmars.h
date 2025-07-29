@@ -8,24 +8,23 @@ http://www.boost.org/LICENSE_1_0.txt)
 #ifndef BOOST_PREDEF_COMPILER_DIGITALMARS_H
 #define BOOST_PREDEF_COMPILER_DIGITALMARS_H
 
-#include <boost/predef/make.h>
 #include <boost/predef/version_number.h>
+#include <boost/predef/make.h>
 
-/* tag::reference[]
-= `BOOST_COMP_DMC`
+/*`
+[heading `BOOST_COMP_DMC`]
 
-http://en.wikipedia.org/wiki/Digital_Mars[Digital Mars] compiler.
+[@http://en.wikipedia.org/wiki/Digital_Mars Digital Mars] compiler.
 Version number available as major, minor, and patch.
 
-[options="header"]
-|===
-| {predef_symbol} | {predef_version}
+[table
+    [[__predef_symbol__] [__predef_version__]]
 
-| `+__DMC__+` | {predef_detection}
+    [[`__DMC__`] [__predef_detection__]]
 
-| `+__DMC__+` | V.R.P
-|===
-*/ // end::reference[]
+    [[`__DMC__`] [V.R.P]]
+    ]
+ */
 
 #define BOOST_COMP_DMC BOOST_VERSION_NUMBER_NOT_AVAILABLE
 

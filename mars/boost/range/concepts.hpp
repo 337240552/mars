@@ -19,13 +19,11 @@
 #include <boost/concept_check.hpp>
 #include <boost/iterator/iterator_concepts.hpp>
 #include <boost/range/begin.hpp>
-#include <boost/range/detail/misc_concept.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/iterator.hpp>
 #include <boost/range/value_type.hpp>
+#include <boost/range/detail/misc_concept.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-
-#include <iterator>
 
 /*!
  * \file
@@ -84,7 +82,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
     #endif
 #endif
 
-    #ifdef BOOST_BORLANDC
+    #ifdef __BORLANDC__
         #define BOOST_RANGE_ENABLE_CONCEPT_ASSERT 0
     #endif
 
@@ -166,10 +164,10 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
                 // work
                 (void)(i++);
 
-                BOOST_DEDUCED_TYPENAME std::iterator_traits<Iterator>::reference r1(*i);
+                BOOST_DEDUCED_TYPENAME mars_boost::detail::iterator_traits<Iterator>::reference r1(*i);
                 mars_boost::ignore_unused_variable_warning(r1);
 
-                BOOST_DEDUCED_TYPENAME std::iterator_traits<Iterator>::reference r2(*(++i));
+                BOOST_DEDUCED_TYPENAME mars_boost::detail::iterator_traits<Iterator>::reference r2(*(++i));
                 mars_boost::ignore_unused_variable_warning(r2);
             }
         private:
@@ -183,7 +181,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
             , DefaultConstructible<Iterator>
         {
 #if BOOST_RANGE_ENABLE_CONCEPT_ASSERT
-            typedef BOOST_DEDUCED_TYPENAME std::iterator_traits<Iterator>::difference_type difference_type;
+            typedef BOOST_DEDUCED_TYPENAME mars_boost::detail::iterator_traits<Iterator>::difference_type difference_type;
 
             BOOST_MPL_ASSERT((is_integral<difference_type>));
             BOOST_MPL_ASSERT_RELATION(std::numeric_limits<difference_type>::is_signed, ==, true);
@@ -202,7 +200,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
                 // is convertible to reference.
                 Iterator i2(i++);
                 mars_boost::ignore_unused_variable_warning(i2);
-                BOOST_DEDUCED_TYPENAME std::iterator_traits<Iterator>::reference r(*(i++));
+                BOOST_DEDUCED_TYPENAME mars_boost::detail::iterator_traits<Iterator>::reference r(*(i++));
                 mars_boost::ignore_unused_variable_warning(r);
             }
         private:
@@ -252,7 +250,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
                  n = i - j;
              }
          private:
-             BOOST_DEDUCED_TYPENAME BidirectionalIteratorConcept<Iterator>::difference_type n;
+             BOOST_DEDUCED_TYPENAME RandomAccessIteratorConcept::difference_type n;
              Iterator i;
              Iterator j;
  #endif

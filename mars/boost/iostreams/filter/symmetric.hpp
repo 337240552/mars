@@ -37,28 +37,27 @@
 #ifndef BOOST_IOSTREAMS_SYMMETRIC_FILTER_HPP_INCLUDED
 #define BOOST_IOSTREAMS_SYMMETRIC_FILTER_HPP_INCLUDED
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
 #endif
 
 #include <boost/assert.hpp>
+#include <memory>                               // allocator, auto_ptr.
 #include <boost/config.hpp>                     // BOOST_DEDUCED_TYPENAME.
 #include <boost/iostreams/char_traits.hpp>
 #include <boost/iostreams/constants.hpp>        // buffer size.
 #include <boost/iostreams/detail/buffer.hpp>
 #include <boost/iostreams/detail/char_traits.hpp>
 #include <boost/iostreams/detail/config/limits.hpp>
-#include <boost/iostreams/detail/ios.hpp>  // streamsize.
 #include <boost/iostreams/detail/template_params.hpp>
+#include <boost/iostreams/traits.hpp>
 #include <boost/iostreams/operations.hpp>       // read, write.
 #include <boost/iostreams/pipeline.hpp>
-#include <boost/iostreams/traits.hpp>
 #include <boost/preprocessor/iteration/local.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/shared_ptr.hpp>
-#include <memory>                               // allocator.
 
 // Must come last.
 #include <boost/iostreams/detail/config/disable_warnings.hpp>  // MSVC.
@@ -86,7 +85,7 @@ public:
     #define BOOST_PP_LOCAL_MACRO(n) \
         BOOST_IOSTREAMS_TEMPLATE_PARAMS(n, T) \
         explicit symmetric_filter( \
-              std::streamsize buffer_size BOOST_PP_COMMA_IF(n) \
+              int buffer_size BOOST_PP_COMMA_IF(n) \
               BOOST_PP_ENUM_BINARY_PARAMS(n, const T, &t) ) \
             : pimpl_(new impl(buffer_size BOOST_PP_COMMA_IF(n) \
                      BOOST_PP_ENUM_PARAMS(n, t))) \
@@ -165,7 +164,7 @@ public:
                 begin_write();
 
             // Repeatedly invoke filter() with no input.
-            try {
+             BOOST_TRY {
                 buffer_type&     buf = pimpl_->buf_;
                 char_type        dummy;
                 const char_type* end = &dummy;
@@ -176,10 +175,10 @@ public:
                                                  buf.eptr(), true );
                     flush(snk);
                 }
-            } catch (...) {
-                try { close_impl(); } catch (...) { }
-                throw;
-            }
+            } BOOST_CATCH (...) {
+                BOOST_TRY { close_impl(); } BOOST_CATCH (...) { } BOOST_CATCH_END
+                BOOST_RETHROW;
+            } BOOST_CATCH_END}
             close_impl();
         } else {
             close_impl();
@@ -253,7 +252,7 @@ private:
     // Expands to a sequence of ctors which forward to SymmetricFilter.
     #define BOOST_PP_LOCAL_MACRO(n) \
         BOOST_IOSTREAMS_TEMPLATE_PARAMS(n, T) \
-        impl( std::streamsize buffer_size BOOST_PP_COMMA_IF(n) \
+        impl( int buffer_size BOOST_PP_COMMA_IF(n) \
               BOOST_PP_ENUM_BINARY_PARAMS(n, const T, &t) ) \
             : SymmetricFilter(BOOST_PP_ENUM_PARAMS(n, t)), \
               buf_(buffer_size), state_(0) \

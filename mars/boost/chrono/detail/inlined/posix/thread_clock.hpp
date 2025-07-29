@@ -10,7 +10,6 @@
 
 //--------------------------------------------------------------------------------------//
 
-#include <boost/assert.hpp>
 #include <boost/chrono/config.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <cassert>
@@ -65,21 +64,21 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost { nam
         if ( ::clock_gettime( clock_id, &ts ) )
 #endif
         {
-            if (::mars_boost::chrono::is_throws(ec))
+            if (BOOST_CHRONO_IS_THROWS(ec))
             {
                 mars_boost::throw_exception(
                         system::system_error(
                                 errno,
-                                ::mars_boost::system::system_category(),
+                                BOOST_CHRONO_SYSTEM_CATEGORY,
                                 "chrono::thread_clock" ));
             }
             else
             {
-                ec.assign( errno, ::mars_boost::system::system_category() );
+                ec.assign( errno, BOOST_CHRONO_SYSTEM_CATEGORY );
                 return time_point();
             }
         }
-        if (!::mars_boost::chrono::is_throws(ec))
+        if (!BOOST_CHRONO_IS_THROWS(ec))
         {
             ec.clear();
         }

@@ -10,15 +10,14 @@
 #define BOOST_TT_HAS_TRIVIAL_ASSIGN_HPP_INCLUDED
 
 #include <boost/type_traits/detail/config.hpp>
-#include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/intrinsics.hpp>
-#include <cstddef> // size_t
+#include <boost/type_traits/integral_constant.hpp>
 
-#if !defined(BOOST_HAS_TRIVIAL_ASSIGN) || defined(BOOST_MSVC) || defined(__GNUC__) || defined(BOOST_INTEL) || defined(__SUNPRO_CC) || defined(__clang__)
-#include <boost/type_traits/is_assignable.hpp>
-#include <boost/type_traits/is_const.hpp>
+#if !defined(BOOST_HAS_TRIVIAL_ASSIGN) || defined(BOOST_MSVC) || defined(__GNUC__) || defined(BOOST_INTEL) || defined(__SUNPRO_CC) || defined(__clang)
 #include <boost/type_traits/is_pod.hpp>
+#include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_volatile.hpp>
+#include <boost/type_traits/is_assignable.hpp>
 #endif
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {

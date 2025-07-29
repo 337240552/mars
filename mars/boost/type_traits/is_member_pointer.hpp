@@ -26,7 +26,7 @@
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
 
-#if defined( BOOST_CODEGEARC )
+#if defined( __CODEGEARC__ )
 template <class T> struct is_member_pointer : public integral_constant<bool, __is_member_pointer(T)>{};
 #else
 template <class T> struct is_member_pointer : public integral_constant<bool, ::mars_boost::is_member_function_pointer<T>::value>{};

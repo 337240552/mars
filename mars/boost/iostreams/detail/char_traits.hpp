@@ -12,17 +12,17 @@
 #ifndef BOOST_IOSTREAMS_DETAIL_CHAR_TRAITS_HPP_INCLUDED
 #define BOOST_IOSTREAMS_DETAIL_CHAR_TRAITS_HPP_INCLUDED
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
 #endif
 
-#include <boost/iostreams/detail/config/wide_streams.hpp>
 #include <iosfwd>
+#include <boost/iostreams/detail/config/wide_streams.hpp>
 #ifdef BOOST_IOSTREAMS_NO_STREAM_TEMPLATES
 # include <boost/config.hpp> // Make sure size_t is in std.
 # include <cstddef>
-# include <cstdio>
 # include <cstring>
+# include <cstdio>
 #endif
 
 #ifndef BOOST_IOSTREAMS_NO_STREAM_TEMPLATES //--------------------------------//

@@ -25,9 +25,8 @@
 #endif
 
 #include <boost/move/detail/config_begin.hpp>
-#include <boost/move/detail/workaround.hpp>  //forceinline
-#include <boost/move/traits.hpp>
 #include <boost/move/utility_core.hpp>
+#include <boost/move/traits.hpp>
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && !defined(BOOST_MOVE_DOXYGEN_INVOKED)
 
@@ -40,7 +39,7 @@
    //////////////////////////////////////////////////////////////////////////////
 
    template <class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < enable_move_utility_emulation<T>::value && !has_move_emulation_enabled<T>::value
       , typename ::mars_boost::move_detail::add_const<T>::type &
       >::type
@@ -50,7 +49,7 @@
    }
 
    template <class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value
             && ::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value, rv<T>&>::type
          move_if_noexcept(T& x) BOOST_NOEXCEPT
@@ -59,7 +58,7 @@
    }
 
    template <class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value
             && ::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value
       , rv<T>&
@@ -70,7 +69,7 @@
    }
 
    template <class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value
             && !::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value
       , typename ::mars_boost::move_detail::add_const<T>::type &
@@ -81,7 +80,7 @@
    }
 
    template <class T>
-   BOOST_MOVE_FORCEINLINE typename ::mars_boost::move_detail::enable_if_c
+   inline typename ::mars_boost::move_detail::enable_if_c
       < enable_move_utility_emulation<T>::value && has_move_emulation_enabled<T>::value
             && !::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value
       , typename ::mars_boost::move_detail::add_const<T>::type &
@@ -126,13 +125,13 @@
       #else //BOOST_MOVE_DOXYGEN_INVOKED
 
          template <class T>
-         BOOST_MOVE_INTRINSIC_CAST typename ::mars_boost::move_detail::enable_if_c
+         typename ::mars_boost::move_detail::enable_if_c
             < ::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value, T&&>::type
                move_if_noexcept(T& x) BOOST_NOEXCEPT
          {  return ::mars_boost::move(x);   }
 
          template <class T>
-         BOOST_MOVE_INTRINSIC_CAST typename ::mars_boost::move_detail::enable_if_c
+         typename ::mars_boost::move_detail::enable_if_c
             < !::mars_boost::move_detail::is_nothrow_move_constructible_or_uncopyable<T>::value, const T&>::type
                move_if_noexcept(T& x) BOOST_NOEXCEPT
          {  return x;  }

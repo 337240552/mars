@@ -11,10 +11,11 @@
 #ifndef BOOST_IOSTREAMS_FILE_DESCRIPTOR_HPP_INCLUDED
 #define BOOST_IOSTREAMS_FILE_DESCRIPTOR_HPP_INCLUDED
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER >= 1020)
 # pragma once
 #endif
 
+#include <string>
 #include <boost/cstdint.hpp>               // intmax_t.
 #include <boost/iostreams/categories.hpp>  // tags.
 #include <boost/iostreams/detail/config/auto_link.hpp>
@@ -25,13 +26,8 @@
 #include <boost/iostreams/detail/path.hpp>
 #include <boost/iostreams/positioning.hpp>
 #include <boost/shared_ptr.hpp>
-#include <string>
 
 // Must come last.
-#if defined(BOOST_MSVC)
-# pragma warning(push)
-# pragma warning(disable:4251)  // Missing DLL interface for shared_ptr
-#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost { namespace iostreams {
@@ -318,8 +314,5 @@ private:
 } } // End namespaces iostreams, boost.
 
 #include <boost/config/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
-#if defined(BOOST_MSVC)
-# pragma warning(pop)  // pops #pragma warning(disable:4251)
-#endif
 
 #endif // #ifndef BOOST_IOSTREAMS_FILE_DESCRIPTOR_HPP_INCLUDED

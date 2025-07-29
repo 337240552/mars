@@ -9,19 +9,15 @@
  * $Date$
  */
 
-#include <boost/date_time/compiler_config.hpp>
-
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
 namespace date_time {
 
   //! Allow rapid creation of ymd triples of different types
   template<typename YearType, typename MonthType, typename DayType>
-  struct BOOST_SYMBOL_VISIBLE year_month_day_base {
-    BOOST_CXX14_CONSTEXPR
-    year_month_day_base(YearType  year,
+  struct year_month_day_base {
+    year_month_day_base(YearType  year, 
                         MonthType month,
                         DayType   day);
-
     YearType year;
     MonthType month;
     DayType day;
@@ -29,11 +25,11 @@ namespace date_time {
     typedef MonthType month_type;
     typedef DayType   day_type;
   };
-
-
+  
+  
   //! A basic constructor
   template<typename YearType, typename MonthType, typename DayType>
-  inline BOOST_CXX14_CONSTEXPR
+  inline
   year_month_day_base<YearType,MonthType,DayType>::year_month_day_base(YearType y, 
                                                                        MonthType m,
                                                                        DayType d) :
@@ -41,7 +37,7 @@ namespace date_time {
     month(m),
     day(d)
   {}
-
+  
 } }//namespace date_time
 
 

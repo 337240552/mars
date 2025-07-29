@@ -11,14 +11,13 @@
 #ifndef BOOST_CHRONO_DETAIL_INLINED_WIN_THREAD_CLOCK_HPP
 #define BOOST_CHRONO_DETAIL_INLINED_WIN_THREAD_CLOCK_HPP
 
-#include <boost/assert.hpp>
 #include <boost/chrono/config.hpp>
 #include <boost/chrono/thread_clock.hpp>
 #include <cassert>
 
-#include <boost/winapi/get_current_thread.hpp>
-#include <boost/winapi/get_last_error.hpp>
-#include <boost/winapi/get_thread_times.hpp>
+#include <boost/detail/winapi/GetLastError.hpp>
+#include <boost/detail/winapi/GetCurrentThread.hpp>
+#include <boost/detail/winapi/GetThreadTimes.hpp>
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
@@ -29,10 +28,10 @@ namespace chrono
 thread_clock::time_point thread_clock::now( system::error_code & ec )
 {
     //  note that Windows uses 100 nanosecond ticks for FILETIME
-    mars_boost::winapi::FILETIME_ creation, exit, user_time, system_time;
+    mars_boost::detail::winapi::FILETIME_ creation, exit, user_time, system_time;
 
-    if ( mars_boost::winapi::GetThreadTimes(
-            mars_boost::winapi::GetCurrentThread (), &creation, &exit,
+    if ( mars_boost::detail::winapi::GetThreadTimes(
+            mars_boost::detail::winapi::GetCurrentThread (), &creation, &exit,
             &system_time, &user_time ) )
     {
         duration user = duration(
@@ -43,7 +42,7 @@ thread_clock::time_point thread_clock::now( system::error_code & ec )
                 ((static_cast<duration::rep>(system_time.dwHighDateTime) << 32)
                         | system_time.dwLowDateTime) * 100 );
 
-        if (!::mars_boost::chrono::is_throws(ec))
+        if (!BOOST_CHRONO_IS_THROWS(ec)) 
         {
             ec.clear();
         }
@@ -52,17 +51,17 @@ thread_clock::time_point thread_clock::now( system::error_code & ec )
     }
     else
     {
-        if (::mars_boost::chrono::is_throws(ec))
+        if (BOOST_CHRONO_IS_THROWS(ec)) 
         {
             mars_boost::throw_exception(
-                    system::system_error(
-                            mars_boost::winapi::GetLastError(),
-                            ::mars_boost::system::system_category(),
+                    system::system_error( 
+                            mars_boost::detail::winapi::GetLastError(), 
+                            BOOST_CHRONO_SYSTEM_CATEGORY, 
                             "chrono::thread_clock" ));
-        }
-        else
+        } 
+        else 
         {
-            ec.assign( mars_boost::winapi::GetLastError(), ::mars_boost::system::system_category() );
+            ec.assign( mars_boost::detail::winapi::GetLastError(), BOOST_CHRONO_SYSTEM_CATEGORY );
             return thread_clock::time_point(duration(0));
         }
     }
@@ -73,10 +72,10 @@ thread_clock::time_point thread_clock::now() BOOST_NOEXCEPT
 {
 
     //  note that Windows uses 100 nanosecond ticks for FILETIME
-    mars_boost::winapi::FILETIME_ creation, exit, user_time, system_time;
+    mars_boost::detail::winapi::FILETIME_ creation, exit, user_time, system_time;
 
-    if ( mars_boost::winapi::GetThreadTimes(
-            mars_boost::winapi::GetCurrentThread (), &creation, &exit,
+    if ( mars_boost::detail::winapi::GetThreadTimes( 
+            mars_boost::detail::winapi::GetCurrentThread (), &creation, &exit,
             &system_time, &user_time ) )
     {
         duration user   = duration(

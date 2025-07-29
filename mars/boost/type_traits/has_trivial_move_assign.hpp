@@ -11,20 +11,19 @@
 #ifndef BOOST_TT_HAS_TRIVIAL_MOVE_ASSIGN_HPP_INCLUDED
 #define BOOST_TT_HAS_TRIVIAL_MOVE_ASSIGN_HPP_INCLUDED
 
-#include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/intrinsics.hpp>
-#include <cstddef> // size_t
+#include <boost/type_traits/integral_constant.hpp>
 
 #if !defined(BOOST_HAS_TRIVIAL_MOVE_ASSIGN) || defined(BOOST_MSVC) || defined(BOOST_INTEL)
-#include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_pod.hpp>
+#include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_volatile.hpp>
 #ifdef BOOST_MSVC
 #include <boost/type_traits/is_reference.hpp>
 #endif
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__GNUC__) || defined(__clang)
 #include <boost/type_traits/is_assignable.hpp>
 #include <boost/type_traits/is_volatile.hpp>
 #endif

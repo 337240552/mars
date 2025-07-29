@@ -8,9 +8,8 @@
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
-#include <boost/winapi/config.hpp>
 
-#if defined(BOOST_THREAD_WIN32) && defined(BOOST_THREAD_BUILD_LIB)
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
 
 #if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR)
 
@@ -22,7 +21,7 @@
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
-    void mars_boosttss_cleanup_implemented() {}
+    void tss_cleanup_implemented() {}
 }
 
 namespace {
@@ -39,7 +38,7 @@ namespace {
     }
 }
 
-#if defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR) || (__MINGW32__) || (__MINGW32_MAJOR_VERSION >3) ||   \
+#if defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR) || (__MINGW32_MAJOR_VERSION >3) ||             \
     ((__MINGW32_MAJOR_VERSION==3) && (__MINGW32_MINOR_VERSION>=18))
 extern "C"
 {
@@ -48,9 +47,9 @@ extern "C"
 #else
 extern "C" {
 
-    void (* after_ctors )() __attribute__((section(".ctors")))     = mars_boost::mars_booston_process_enter;
-    void (* before_dtors)() __attribute__((section(".dtors")))     = mars_boost::mars_booston_thread_exit;
-    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = mars_boost::mars_booston_process_exit;
+    void (* after_ctors )() __attribute__((section(".ctors")))     = mars_boost::on_process_enter;
+    void (* before_dtors)() __attribute__((section(".dtors")))     = mars_boost::on_thread_exit;
+    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = mars_boost::on_process_exit;
 
     ULONG __tls_index__ = 0;
     char __tls_end__ __attribute__((section(".tls$zzz"))) = 0;
@@ -78,6 +77,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 
     #include <stdlib.h>
 
+    #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
 
 
@@ -94,15 +94,15 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #if (_MSC_VER >= 1500)
 
 extern "C" {
-extern BOOL (WINAPI * const _pRawDllMainOrig)(HINSTANCE, DWORD, LPVOID);
-extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) = NULL;
+extern BOOL (WINAPI * const _pRawDllMainOrig)(HANDLE, DWORD, LPVOID);
+extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NULL;
 #if defined (_M_IX86)
 #pragma comment(linker, "/alternatename:__pRawDllMainOrig=__pDefaultRawDllMainOrig")
-#elif defined (_M_X64) || defined (_M_ARM) || defined (_M_ARM64)
+#elif defined (_M_X64) || defined (_M_ARM)
 #pragma comment(linker, "/alternatename:_pRawDllMainOrig=_pDefaultRawDllMainOrig")
-#else  /* unknown Windows target (not x86, x64, ARM, ARM64) */
+#else  /* defined (_M_X64) || defined (_M_ARM) */
 #error Unsupported platform
-#endif  /* defined (_M_X64) || defined (_M_ARM) || defined (_M_ARM64) */
+#endif  /* defined (_M_X64) || defined (_M_ARM) */
 }
 
 #endif
@@ -111,27 +111,15 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
 
 
     //Definitions required by implementation
-    #if (_MSC_VER < 1300) || ((_MSC_VER > 1900) && (_MSC_VER < 1910)) // 1300 == VC++ 7.0, 1900 == VC++ 14.0, 1910 == VC++ 2017
-        typedef void ( __cdecl *_PVFV_ )();
-        typedef void ( __cdecl *_PIFV_ )();
-        #define INIRETSUCCESS_V
-        #define INIRETSUCCESS_I
-        #define PVAPI_V void __cdecl
-        #define PVAPI_I void __cdecl
-    #elif (_MSC_VER >= 1910)
-        typedef void ( __cdecl *_PVFV_ )();
-        typedef int ( __cdecl *_PIFV_ )();
-        #define INIRETSUCCESS_V
-        #define INIRETSUCCESS_I 0
-        #define PVAPI_V void __cdecl
-        #define PVAPI_I int __cdecl
+
+    #if (_MSC_VER < 1300) // 1300 == VC++ 7.0
+        typedef void (__cdecl *_PVFV)();
+        #define INIRETSUCCESS
+        #define PVAPI void __cdecl
     #else
-        typedef int ( __cdecl *_PVFV_ )();
-        typedef int ( __cdecl *_PIFV_ )();
-        #define INIRETSUCCESS_V 0
-        #define INIRETSUCCESS_I 0
-        #define PVAPI_V int __cdecl
-        #define PVAPI_I int __cdecl
+        typedef int (__cdecl *_PVFV)();
+        #define INIRETSUCCESS 0
+        #define PVAPI int __cdecl
     #endif
 
     typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
@@ -148,29 +136,23 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
     {
         //Forward declarations
 
-        static PVAPI_I on_tls_prepare();
-        static PVAPI_V on_process_init();
-        static PVAPI_V on_process_term();
+        static PVAPI on_tls_prepare();
+        static PVAPI on_process_init();
+        static PVAPI on_process_term();
         static void NTAPI on_tls_callback(HINSTANCE, DWORD, PVOID);
-    }
 
-    namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
-    {
         //The .CRT$Xxx information is taken from Codeguru:
         //http://www.codeguru.com/Cpp/misc/misc/threadsprocesses/article.php/c6945__2/
-
-        // Variables below are not referenced anywhere and
-        // to not be optimized away has to have external linkage
 
 #if (_MSC_VER >= 1400)
 #pragma section(".CRT$XIU",long,read)
 #pragma section(".CRT$XCU",long,read)
 #pragma section(".CRT$XTU",long,read)
 #pragma section(".CRT$XLC",long,read)
-        extern const __declspec(allocate(".CRT$XLC")) _TLSCB p_tls_callback = on_tls_callback;
-        extern const __declspec(allocate(".CRT$XIU")) _PIFV_ p_tls_prepare = on_tls_prepare;
-        extern const __declspec(allocate(".CRT$XCU")) _PVFV_ p_process_init = on_process_init;
-        extern const __declspec(allocate(".CRT$XTU")) _PVFV_ p_process_term = on_process_term;
+        __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
+        __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
+        __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
+        __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
 #else
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
@@ -182,39 +164,36 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
             //this could be changed easily if required.
 
             #pragma data_seg(".CRT$XIU")
-            extern const _PIFV_ p_tls_prepare = on_tls_prepare;
+            static _PVFV p_tls_prepare = on_tls_prepare;
             #pragma data_seg()
 
             //Callback after all global ctors.
 
             #pragma data_seg(".CRT$XCU")
-            extern const _PVFV_ p_process_init = on_process_init;
+            static _PVFV p_process_init = on_process_init;
             #pragma data_seg()
 
             //Callback for tls notifications.
 
             #pragma data_seg(".CRT$XLB")
-            extern const _TLSCB p_thread_callback = on_tls_callback;
+            _TLSCB p_thread_callback = on_tls_callback;
             #pragma data_seg()
             //Callback for termination.
 
             #pragma data_seg(".CRT$XTU")
-            extern const _PVFV_ p_process_term = on_process_term;
+            static _PVFV p_process_term = on_process_term;
             #pragma data_seg()
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(pop, old_seg)
         #endif
 #endif
-    } // namespace mars_boost
 
-    namespace
-    {
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4189)
 #endif
 
-        PVAPI_I on_tls_prepare()
+        PVAPI on_tls_prepare()
         {
             //The following line has an important side effect:
             //if the TLS directory is not already there, it will
@@ -249,15 +228,15 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
                 *pfdst = 0;
             #endif
 
-            return INIRETSUCCESS_I;
+            return INIRETSUCCESS;
         }
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
 
-        PVAPI_V on_process_init()
+        PVAPI on_process_init()
         {
-            //Schedule mars_booston_thread_exit() to be called for the main
+            //Schedule on_thread_exit() to be called for the main
             //thread before destructors of global objects have been
             //called.
 
@@ -266,19 +245,19 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
             //for destructors of global objects, so that
             //shouldn't be a problem.
 
-            atexit(mars_boost::mars_booston_thread_exit);
+            atexit(mars_boost::on_thread_exit);
 
             //Call Boost process entry callback here
 
-            mars_boost::mars_booston_process_enter();
+            mars_boost::on_process_enter();
 
-            return INIRETSUCCESS_V;
+            return INIRETSUCCESS;
         }
 
-        PVAPI_V on_process_term()
+        PVAPI on_process_term()
         {
-            mars_boost::mars_booston_process_exit();
-            return INIRETSUCCESS_V;
+            mars_boost::on_process_exit();
+            return INIRETSUCCESS;
         }
 
         void NTAPI on_tls_callback(HINSTANCE /*h*/, DWORD dwReason, PVOID /*pv*/)
@@ -286,24 +265,24 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
             switch (dwReason)
             {
             case DLL_THREAD_DETACH:
-                mars_boost::mars_booston_thread_exit();
+                mars_boost::on_thread_exit();
                 break;
             }
         }
 
 #if (_MSC_VER >= 1500)
-        BOOL WINAPI dll_callback(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+        BOOL WINAPI dll_callback(HANDLE hInstance, DWORD dwReason, LPVOID lpReserved)
 #else
-        BOOL WINAPI dll_callback(HINSTANCE, DWORD dwReason, LPVOID)
+        BOOL WINAPI dll_callback(HANDLE, DWORD dwReason, LPVOID)
 #endif
         {
             switch (dwReason)
             {
             case DLL_THREAD_DETACH:
-                mars_boost::mars_booston_thread_exit();
+                mars_boost::on_thread_exit();
                 break;
             case DLL_PROCESS_DETACH:
-                mars_boost::mars_booston_process_exit();
+                mars_boost::on_process_exit();
                 break;
             }
 
@@ -319,18 +298,18 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
 
 extern "C"
 {
-    extern BOOL (WINAPI * const _pRawDllMain)(HINSTANCE, DWORD, LPVOID)=&dll_callback;
+    extern BOOL (WINAPI * const _pRawDllMain)(HANDLE, DWORD, LPVOID)=&dll_callback;
 }
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
-    void mars_boosttss_cleanup_implemented()
+    void tss_cleanup_implemented()
     {
         /*
         This function's sole purpose is to cause a link error in cases where
         automatic tss cleanup is not implemented by Boost.Threads as a
         reminder that user code is responsible for calling the necessary
         functions at the appropriate times (and for implementing an a
-        mars_boosttss_cleanup_implemented() function to eliminate the linker's
+        tss_cleanup_implemented() function to eliminate the linker's
         missing symbol error).
 
         If Boost.Threads later implements automatic tss cleanup in cases
@@ -343,4 +322,4 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 
 #endif //defined(_MSC_VER) && !defined(UNDER_CE)
 
-#endif //defined(BOOST_THREAD_WIN32) && defined(BOOST_THREAD_BUILD_LIB)
+#endif //defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)

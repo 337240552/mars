@@ -8,8 +8,8 @@ http://www.boost.org/LICENSE_1_0.txt)
 #ifndef BOOST_PREDEF_LIBRARY_C_GNU_H
 #define BOOST_PREDEF_LIBRARY_C_GNU_H
 
-#include <boost/predef/make.h>
 #include <boost/predef/version_number.h>
+#include <boost/predef/make.h>
 
 #include <boost/predef/library/c/_prefix.h>
 
@@ -19,23 +19,22 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <cstddef>
 #endif
 
-/* tag::reference[]
-= `BOOST_LIB_C_GNU`
+/*`
+[heading `BOOST_LIB_C_GNU`]
 
-http://en.wikipedia.org/wiki/Glibc[GNU glibc] Standard C library.
+[@http://en.wikipedia.org/wiki/Glibc GNU glibc] Standard C library.
 Version number available as major, and minor.
 
-[options="header"]
-|===
-| {predef_symbol} | {predef_version}
+[table
+    [[__predef_symbol__] [__predef_version__]]
 
-| `+__GLIBC__+` | {predef_detection}
-| `+__GNU_LIBRARY__+` | {predef_detection}
+    [[`__GLIBC__`] [__predef_detection__]]
+    [[`__GNU_LIBRARY__`] [__predef_detection__]]
 
-| `+__GLIBC__+`, `+__GLIBC_MINOR__+` | V.R.0
-| `+__GNU_LIBRARY__+`, `+__GNU_LIBRARY_MINOR__+` | V.R.0
-|===
-*/ // end::reference[]
+    [[`__GLIBC__`, `__GLIBC_MINOR__`] [V.R.0]]
+    [[`__GNU_LIBRARY__`, `__GNU_LIBRARY_MINOR__`] [V.R.0]]
+    ]
+ */
 
 #define BOOST_LIB_C_GNU BOOST_VERSION_NUMBER_NOT_AVAILABLE
 

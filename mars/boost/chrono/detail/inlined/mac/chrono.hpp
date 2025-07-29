@@ -11,9 +11,8 @@
 //                                 Mac                                        //
 //----------------------------------------------------------------------------//
 
-#include <boost/assert.hpp>
-#include <mach/mach_time.h>  // mach_absolute_time, mach_timebase_info_data_t
 #include <sys/time.h> //for gettimeofday and timeval
+#include <mach/mach_time.h>  // mach_absolute_time, mach_timebase_info_data_t
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
@@ -30,7 +29,7 @@ system_clock::time_point
 system_clock::now() BOOST_NOEXCEPT
 {
     timeval tv;
-    gettimeofday(&tv, BOOST_NULLPTR);
+    gettimeofday(&tv, 0);
     return time_point(seconds(tv.tv_sec) + microseconds(tv.tv_usec));
 }
 
@@ -39,8 +38,8 @@ system_clock::time_point
 system_clock::now(system::error_code & ec)
 {
     timeval tv;
-    gettimeofday(&tv, BOOST_NULLPTR);
-    if (!::mars_boost::chrono::is_throws(ec))
+    gettimeofday(&tv, 0);
+    if (!BOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }
@@ -89,7 +88,7 @@ BOOST_CHRONO_STATIC
 steady_clock::rep
 steady_simplified_ec(system::error_code & ec)
 {
-    if (!::mars_boost::chrono::is_throws(ec))
+    if (!BOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }
@@ -131,21 +130,21 @@ steady_full_ec(system::error_code & ec)
     const double factor = chrono_detail::compute_steady_factor(err);
     if (err != 0)
     {
-        if (::mars_boost::chrono::is_throws(ec))
+        if (BOOST_CHRONO_IS_THROWS(ec))
         {
             mars_boost::throw_exception(
                     system::system_error(
                             err,
-                            ::mars_boost::system::system_category(),
+                            BOOST_CHRONO_SYSTEM_CATEGORY,
                             "chrono::steady_clock" ));
         }
         else
         {
-            ec.assign( errno, ::mars_boost::system::system_category() );
+            ec.assign( errno, BOOST_CHRONO_SYSTEM_CATEGORY );
             return steady_clock::rep();
         }
     }
-    if (!::mars_boost::chrono::is_throws(ec))
+    if (!BOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }
@@ -166,7 +165,7 @@ init_steady_clock(kern_return_t & err)
     err = mach_timebase_info(&MachInfo);
     if ( err != 0  )
     {
-        return BOOST_NULLPTR;
+        return 0;
     }
 
     if (MachInfo.numer == MachInfo.denom)
@@ -185,7 +184,7 @@ init_steady_clock_ec(kern_return_t & err)
     err = mach_timebase_info(&MachInfo);
     if ( err != 0  )
     {
-        return BOOST_NULLPTR;
+        return 0;
     }
 
     if (MachInfo.numer == MachInfo.denom)
@@ -217,21 +216,21 @@ steady_clock::now(system::error_code & ec)
     chrono_detail::FP_ec fp = chrono_detail::init_steady_clock_ec(err);
     if ( err != 0  )
     {
-        if (::mars_boost::chrono::is_throws(ec))
+        if (BOOST_CHRONO_IS_THROWS(ec))
         {
             mars_boost::throw_exception(
                     system::system_error(
                             err,
-                            ::mars_boost::system::system_category(),
+                            BOOST_CHRONO_SYSTEM_CATEGORY,
                             "chrono::steady_clock" ));
         }
         else
         {
-            ec.assign( err, ::mars_boost::system::system_category() );
+            ec.assign( err, BOOST_CHRONO_SYSTEM_CATEGORY );
             return time_point();
         }
     }
-    if (!::mars_boost::chrono::is_throws(ec))
+    if (!BOOST_CHRONO_IS_THROWS(ec))
     {
         ec.clear();
     }

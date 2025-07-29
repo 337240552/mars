@@ -19,11 +19,6 @@
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
 
-#if defined(__clang__)
-# pragma clang diagnostic push
-# pragma clang diagnostic ignored "-Wweak-vtables"
-#endif
-
 class bad_optional_access : public std::logic_error
 {
 public:
@@ -31,10 +26,6 @@ public:
     : std::logic_error("Attempted to access the value of an uninitialized optional object.")
     {}
 };
-
-#if defined(__clang__)
-# pragma clang diagnostic pop
-#endif
 
 } // namespace mars_boost
 

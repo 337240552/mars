@@ -6,8 +6,8 @@
 // (C) Copyright 2007-2010 Anthony Williams
 // (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
-#include <boost/predef/platform.h>
 #include <boost/thread/detail/config.hpp>
+#include <boost/predef/platform.h>
 
 #include <boost/thread/exceptions.hpp>
 #ifndef BOOST_NO_IOSTREAM
@@ -18,31 +18,27 @@
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-#include <boost/thread/interruption.hpp>
-#endif
-#include <algorithm>
-#include <boost/assert.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/core/enable_if.hpp>
-#include <boost/core/ref.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/functional/hash.hpp>
-#include <boost/io/ios_state.hpp>
+#include <boost/thread/detail/thread_heap_alloc.hpp>
+#include <boost/thread/detail/make_tuple_indices.hpp>
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
-#include <boost/thread/detail/make_tuple_indices.hpp>
-#include <boost/thread/detail/platform_time.hpp>
-#include <boost/thread/detail/thread_heap_alloc.hpp>
-#include <boost/type_traits/decay.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/remove_reference.hpp>
+#include <boost/assert.hpp>
 #include <list>
-#include <memory>
+#include <algorithm>
+#include <boost/core/ref.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/bind.hpp>
 #include <stdlib.h>
+#include <memory>
+#include <boost/core/enable_if.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+#include <boost/io/ios_state.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/decay.hpp>
+#include <boost/functional/hash.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
-#include <boost/chrono/ceil.hpp>
 #include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
 #endif
 
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -125,7 +121,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         };
 
         template<typename F>
-        class thread_data<mars_boost::reference_wrapper<F> >:
+        class thread_data<boost::reference_wrapper<F> >:
             public detail::thread_data_base
         {
         private:
@@ -225,7 +221,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f
             , typename disable_if_c<
-                //mars_boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
+                //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
                 is_same<typename decay<F>::type, thread>::value,
                 dummy* >::type=0
                 )
@@ -295,8 +291,8 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         template <class F>
         explicit thread(F f
         , typename disable_if_c<
-        mars_boost::thread_detail::is_rv<F>::value // todo as a thread_detail::is_rv
-        //mars_boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
+        mars_boost::thread_detail::is_rv<F>::value // todo ass a thread_detail::is_rv
+        //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
             //|| is_same<typename decay<F>::type, thread>::value
            , dummy* >::type=0
         ):
@@ -306,8 +302,8 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         }
         template <class F>
         thread(attributes const& attrs, F f
-            , typename disable_if<mars_boost::thread_detail::is_rv<F>, dummy* >::type=0
-            //, typename disable_if<mars_boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
+            , typename disable_if<boost::thread_detail::is_rv<F>, dummy* >::type=0
+            //, typename disable_if<boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
         ):
             thread_info(make_thread_info(f))
         {
@@ -391,7 +387,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         }
 #else
         template <class F,class A1>
-        thread(F f,A1 a1,typename disable_if<mars_boost::thread_detail::is_convertible<F&,thread_attributes >, dummy* >::type=0):
+        thread(F f,A1 a1,typename disable_if<boost::thread_detail::is_convertible<F&,thread_attributes >, dummy* >::type=0):
             thread_info(make_thread_info(mars_boost::bind(mars_boost::type<void>(),f,a1)))
         {
             start_thread();
@@ -458,80 +454,104 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         }
 
         class id;
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+        inline id get_id()  const BOOST_NOEXCEPT;
+#else
         id get_id() const BOOST_NOEXCEPT;
+#endif
+
 
         bool joinable() const BOOST_NOEXCEPT;
     private:
         bool join_noexcept();
-        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
-        bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
     public:
-        void join();
+        inline void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return do_try_join_until(mars_boost::detail::internal_platform_timepoint(t));
+          chrono::milliseconds rel_time2= chrono::ceil<chrono::milliseconds>(rel_time);
+          return do_try_join_until(rel_time2.count());
         }
-
-        template <class Clock, class Duration>
-        bool try_join_until(const chrono::time_point<Clock, Duration>& t)
-        {
-          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
-          common_duration d(t - Clock::now());
-          d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
-          while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
-          {
-            d = t - Clock::now();
-            if ( d <= common_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
-          }
-          return true;
-        }
-
+#else
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
           return try_join_until(chrono::steady_clock::now() + rel_time);
         }
 #endif
+        template <class Clock, class Duration>
+        bool try_join_until(const chrono::time_point<Clock, Duration>& t)
+        {
+          using namespace chrono;
+          bool joined= false;
+          do {
+            system_clock::time_point     s_now = system_clock::now();
+            typename Clock::duration   d = ceil<nanoseconds>(t-Clock::now());
+            if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
+            joined = try_join_until(s_now + d);
+          } while (! joined);
+          return true;
+        }
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+          using namespace chrono;
+          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+          return try_join_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+        }
+#endif
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+    private:
+        bool do_try_join_until_noexcept(uintmax_t milli, bool& res);
+        inline bool do_try_join_until(uintmax_t milli);
+    public:
+        bool timed_join(const system_time& abs_time);
+        //{
+        //  return do_try_join_until(get_milliseconds_until(wait_until));
+        //}
+
+#ifdef BOOST_THREAD_USES_CHRONO
+        bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+        {
+          chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
+          return do_try_join_until(rel_time.count());
+        }
+#endif
+
+
+#else
+    private:
+        bool do_try_join_until_noexcept(struct timespec const &timeout, bool& res);
+        inline bool do_try_join_until(struct timespec const &timeout);
+    public:
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
-          const detail::real_platform_timepoint ts(abs_time);
-#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-          detail::platform_duration d(ts - detail::real_platform_clock::now());
-          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
-          while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
-          {
-            d = ts - detail::real_platform_clock::now();
-            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
-          }
-          return true;
-#else
+          struct timespec const ts=detail::to_timespec(abs_time);
           return do_try_join_until(ts);
-#endif
         }
-
-        template<typename TimeDuration>
-        bool timed_join(TimeDuration const& rel_time)
-        {
-          detail::platform_duration d(rel_time);
-#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-          const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
-          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
-          while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
-          {
-            d = ts - detail::mono_platform_clock::now();
-            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
-          }
-          return true;
-#else
-          return do_try_join_until(detail::internal_platform_clock::now() + d);
 #endif
+#ifdef BOOST_THREAD_USES_CHRONO
+        bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+        {
+          using namespace chrono;
+          nanoseconds d = tp.time_since_epoch();
+          timespec ts = mars_boost::detail::to_timespec(d);
+          return do_try_join_until(ts);
+        }
+#endif
+
+#endif
+      public:
+
+#if defined BOOST_THREAD_USES_DATETIME
+        template<typename TimeDuration>
+        inline bool timed_join(TimeDuration const& rel_time)
+        {
+            return timed_join(get_system_time()+rel_time);
         }
 #endif
         void detach();
@@ -585,13 +605,19 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
     namespace this_thread
     {
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
-        thread::id get_id() BOOST_NOEXCEPT;
+        inline thread::id get_id() BOOST_NOEXCEPT;
 #else
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
 #endif
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        void BOOST_THREAD_DECL interruption_point();
+        bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
+        bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
+#endif
+
 #if defined BOOST_THREAD_USES_DATETIME
-        inline BOOST_SYMBOL_VISIBLE void sleep(::mars_boost::xtime const& abs_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
         {
             sleep(system_time(abs_time));
         }
@@ -601,9 +627,6 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
     class BOOST_SYMBOL_VISIBLE thread::id
     {
     private:
-    
-    #if !defined(BOOST_EMBTC)
-      
         friend inline
         std::size_t
         hash_value(const thread::id &v)
@@ -615,14 +638,6 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 #endif
         }
 
-    #else
-      
-        friend
-        std::size_t
-        hash_value(const thread::id &v);
-
-    #endif
-      
 #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
         typedef unsigned int data;
@@ -646,6 +661,10 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 #else
         thread_data()
 #endif
+        {}
+
+        id(const id& other) BOOST_NOEXCEPT :
+            thread_data(other.thread_data)
         {}
 
         bool operator==(const id& y) const BOOST_NOEXCEPT
@@ -715,24 +734,9 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 #endif
 #endif
     };
-    
-#if defined(BOOST_EMBTC)
-
-        inline
-        std::size_t
-        hash_value(const thread::id &v)
-        {
-#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-          return hash_value(v.thread_data);
-#else
-          return hash_value(v.thread_data.get());
-#endif
-        }
-
-#endif
 
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
-    inline thread::id thread::get_id() const BOOST_NOEXCEPT
+    thread::id thread::get_id() const BOOST_NOEXCEPT
     {
     #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
         return const_cast<thread*>(this)->native_handle();
@@ -755,7 +759,7 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         }
     }
 #endif
-    inline void thread::join() {
+    void thread::join() {
         if (this_thread::get_id() == get_id())
           mars_boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
 
@@ -764,7 +768,11 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         );
     }
 
-    inline bool thread::do_try_join_until(detail::internal_platform_timepoint const &timeout)
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+    bool thread::do_try_join_until(struct timespec const &timeout)
+#else
+    bool thread::do_try_join_until(uintmax_t timeout)
+#endif
     {
         if (this_thread::get_id() == get_id())
           mars_boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
@@ -830,7 +838,6 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
         };
 
         void BOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
-//#ifndef BOOST_NO_EXCEPTIONS
         struct shared_state_base;
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
         inline void make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
@@ -844,13 +851,12 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 #else
         void BOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as);
 #endif
-//#endif
     }
 
     namespace this_thread
     {
         template<typename F>
-        void mars_boostat_thread_exit(F f)
+        void at_thread_exit(F f)
         {
             detail::thread_exit_function_base* const thread_exit_func=detail::heap_new<detail::thread_exit_function<F> >(f);
             detail::add_thread_exit_function(thread_exit_func);

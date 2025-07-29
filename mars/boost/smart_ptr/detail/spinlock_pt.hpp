@@ -17,13 +17,6 @@
 
 #include <pthread.h>
 
-#if defined(BOOST_SP_REPORT_IMPLEMENTATION)
-
-#include <boost/config/pragma_message.hpp>
-BOOST_PRAGMA_MESSAGE("Using pthread_mutex spinlock emulation")
-
-#endif
-
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
 
@@ -79,7 +72,7 @@ public:
 };
 
 } // namespace detail
-} // namespace mars_boost
+} // namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 
 #define BOOST_DETAIL_SPINLOCK_INIT { PTHREAD_MUTEX_INITIALIZER }
 

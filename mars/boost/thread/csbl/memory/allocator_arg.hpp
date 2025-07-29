@@ -12,7 +12,18 @@
 #include <boost/thread/csbl/memory/config.hpp>
 
 // 20.7.6, allocator argument tag
+#if defined BOOST_NO_CXX11_ALLOCATOR
+#include <boost/container/scoped_allocator.hpp>
 
+namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
+{
+  namespace csbl
+  {
+    using ::boost::container::allocator_arg_t;
+    using ::boost::container::allocator_arg;
+  }
+}
+#else
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
   namespace csbl
@@ -21,11 +32,10 @@ namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
     using ::std::allocator_arg;
   }
 }
-
+#endif // BOOST_NO_CXX11_ALLOCATOR
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
-  using ::mars_boost::csbl::allocator_arg_t;
-  using ::mars_boost::csbl::allocator_arg;
+  using ::boost::csbl::allocator_arg_t;
+  using ::boost::csbl::allocator_arg;
 }
-
 #endif // header

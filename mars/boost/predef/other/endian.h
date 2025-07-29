@@ -8,15 +8,15 @@ http://www.boost.org/LICENSE_1_0.txt)
 #ifndef BOOST_PREDEF_ENDIAN_H
 #define BOOST_PREDEF_ENDIAN_H
 
-#include <boost/predef/library/c/gnu.h>
-#include <boost/predef/make.h>
-#include <boost/predef/os/bsd.h>
-#include <boost/predef/os/macos.h>
-#include <boost/predef/platform/android.h>
 #include <boost/predef/version_number.h>
+#include <boost/predef/make.h>
+#include <boost/predef/library/c/gnu.h>
+#include <boost/predef/os/macos.h>
+#include <boost/predef/os/bsd.h>
+#include <boost/predef/os/android.h>
 
-/* tag::reference[]
-= `BOOST_ENDIAN_*`
+/*`
+[heading `BOOST_ENDIAN_*`]
 
 Detection of endian memory ordering. There are four defined macros
 in this header that define the various generally possible endian
@@ -37,12 +37,12 @@ programatic bi-endianness is available.
 This implementation is a compilation of various publicly available
 information and acquired knowledge:
 
-. The indispensable documentation of "Pre-defined Compiler Macros"
-  http://sourceforge.net/p/predef/wiki/Endianness[Endianness].
-. The various endian specifications available in the
-  http://wikipedia.org/[Wikipedia] computer architecture pages.
-. Generally available searches for headers that define endianness.
-*/ // end::reference[]
+# The indispensable documentation of "Pre-defined Compiler Macros"
+  [@http://sourceforge.net/p/predef/wiki/Endianness Endianness].
+# The various endian specifications available in the
+  [@http://wikipedia.org/ Wikipedia] computer architecture pages.
+# Generally available searches for headers that define endianness.
+ */
 
 #define BOOST_ENDIAN_BIG_BYTE BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #define BOOST_ENDIAN_BIG_WORD BOOST_VERSION_NUMBER_NOT_AVAILABLE
@@ -54,30 +54,51 @@ information and acquired knowledge:
  */
 #if !BOOST_ENDIAN_BIG_BYTE && !BOOST_ENDIAN_BIG_WORD && \
     !BOOST_ENDIAN_LITTLE_BYTE && !BOOST_ENDIAN_LITTLE_WORD
-#   if BOOST_LIB_C_GNU || BOOST_PLAT_ANDROID || BOOST_OS_BSD_OPEN
+#   if BOOST_LIB_C_GNU || BOOST_OS_ANDROID
 #       include <endian.h>
 #   else
 #       if BOOST_OS_MACOS
 #           include <machine/endian.h>
 #       else
 #           if BOOST_OS_BSD
-#               include <sys/endian.h>
+#               if BOOST_OS_BSD_OPEN
+#                   include <machine/endian.h>
+#               else
+#                   include <sys/endian.h>
+#               endif
 #           endif
 #       endif
 #   endif
-#   if defined(__BYTE_ORDER)
-#       if defined(__BIG_ENDIAN) && (__BYTE_ORDER == __BIG_ENDIAN)
-#           undef BOOST_ENDIAN_BIG_BYTE
-#           define BOOST_ENDIAN_BIG_BYTE BOOST_VERSION_NUMBER_AVAILABLE
-#       endif
-#       if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER == __LITTLE_ENDIAN)
-#           undef BOOST_ENDIAN_LITTLE_BYTE
-#           define BOOST_ENDIAN_LITTLE_BYTE BOOST_VERSION_NUMBER_AVAILABLE
-#       endif
-#       if defined(__PDP_ENDIAN) && (__BYTE_ORDER == __PDP_ENDIAN)
-#           undef BOOST_ENDIAN_LITTLE_WORD
-#           define BOOST_ENDIAN_LITTLE_WORD BOOST_VERSION_NUMBER_AVAILABLE
-#       endif
+#   ifdef WIN32
+#		if defined(__BYTE_ORDER)
+#		    if defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN
+#		        undef BOOST_ENDIAN_BIG_BYTE
+#		        define BOOST_ENDIAN_BIG_BYTE BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		    if defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN
+#		        undef BOOST_ENDIAN_LITTLE_BYTE
+#		        define BOOST_ENDIAN_LITTLE_BYTE BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		    if defined(__PDP_ENDIAN) &&  __BYTE_ORDER == __PDP_ENDIAN
+#		        undef BOOST_ENDIAN_LITTLE_WORD
+#		        define BOOST_ENDIAN_LITTLE_WORD BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		endif
+#   else
+#		if defined(__BYTE_ORDER)
+#		    if defined(__BIG_ENDIAN) && (__BYTE_ORDER == __BIG_ENDIAN)
+#		        undef BOOST_ENDIAN_BIG_BYTE
+#		        define BOOST_ENDIAN_BIG_BYTE BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		    if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER == __LITTLE_ENDIAN)
+#		        undef BOOST_ENDIAN_LITTLE_BYTE
+#		        define BOOST_ENDIAN_LITTLE_BYTE BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		    if defined(__PDP_ENDIAN) &&  (__BYTE_ORDER == __PDP_ENDIAN)
+#		        undef BOOST_ENDIAN_LITTLE_WORD
+#		        define BOOST_ENDIAN_LITTLE_WORD BOOST_VERSION_NUMBER_AVAILABLE
+#		    endif
+#		endif
 #   endif
 #   if !defined(__BYTE_ORDER) && defined(_BYTE_ORDER)
 #       if defined(_BIG_ENDIAN) && (_BYTE_ORDER == _BIG_ENDIAN)
@@ -95,7 +116,7 @@ information and acquired knowledge:
 #   endif
 #endif
 
-/* Built-in byte-swapped big-endian macros.
+/* Built-in byte-swpped big-endian macros.
  */
 #if !BOOST_ENDIAN_BIG_BYTE && !BOOST_ENDIAN_BIG_WORD && \
     !BOOST_ENDIAN_LITTLE_BYTE && !BOOST_ENDIAN_LITTLE_WORD
@@ -112,7 +133,7 @@ information and acquired knowledge:
 #   endif
 #endif
 
-/* Built-in byte-swapped little-endian macros.
+/* Built-in byte-swpped little-endian macros.
  */
 #if !BOOST_ENDIAN_BIG_BYTE && !BOOST_ENDIAN_BIG_WORD && \
     !BOOST_ENDIAN_LITTLE_BYTE && !BOOST_ENDIAN_LITTLE_WORD
@@ -121,12 +142,9 @@ information and acquired knowledge:
         defined(__ARMEL__) || \
         defined(__THUMBEL__) || \
         defined(__AARCH64EL__) || \
-        defined(__loongarch__) || \
         defined(_MIPSEL) || \
         defined(__MIPSEL) || \
-        defined(__MIPSEL__) || \
-        defined(__riscv) || \
-        defined(__e2k__)
+        defined(__MIPSEL__)
 #       undef BOOST_ENDIAN_LITTLE_BYTE
 #       define BOOST_ENDIAN_LITTLE_BYTE BOOST_VERSION_NUMBER_AVAILABLE
 #   endif
@@ -147,7 +165,8 @@ information and acquired knowledge:
 #       undef BOOST_ENDIAN_BIG_BYTE
 #       define BOOST_ENDIAN_BIG_BYTE BOOST_VERSION_NUMBER_AVAILABLE
 #   endif
-#   if BOOST_ARCH_IA64 || \
+#   if BOOST_ARCH_AMD64 || \
+        BOOST_ARCH_IA64 || \
         BOOST_ARCH_X86 || \
         BOOST_ARCH_BLACKFIN
 #       undef BOOST_ENDIAN_LITTLE_BYTE
@@ -156,7 +175,7 @@ information and acquired knowledge:
 #endif
 
 /* Windows on ARM, if not otherwise detected/specified, is always
- * byte-swapped little-endian.
+ * byte-swaped little-endian.
  */
 #if !BOOST_ENDIAN_BIG_BYTE && !BOOST_ENDIAN_BIG_WORD && \
     !BOOST_ENDIAN_LITTLE_BYTE && !BOOST_ENDIAN_LITTLE_WORD

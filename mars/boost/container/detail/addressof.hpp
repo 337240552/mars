@@ -18,15 +18,23 @@
 #  pragma once
 #endif
 
-#include <boost/move/detail/addressof.hpp>
+#include <cstddef>
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
 namespace container {
-namespace dtl {
+namespace container_detail {
 
-using mars_boost::move_detail::addressof;
+template <typename T>
+inline T* addressof(T& obj)
+{
+   return static_cast<T*>(
+      static_cast<void*>(
+         const_cast<char*>(
+            &reinterpret_cast<const char&>(obj)
+   )));
+}
 
-}  //namespace dtl {
+}  //namespace container_detail {
 }  //namespace container {
 }  //namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
 

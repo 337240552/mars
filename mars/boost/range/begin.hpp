@@ -17,14 +17,16 @@
 
 #include <boost/range/config.hpp>
 
-#include <boost/config.hpp>
-#include <boost/config/workaround.hpp>
+#ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+#include <boost/range/detail/begin.hpp>
+#else
+
 #include <boost/range/iterator.hpp>
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
 
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
 namespace range_detail
 {
 #endif
@@ -34,7 +36,7 @@ namespace range_detail
     //////////////////////////////////////////////////////////////////////
 
     template< typename C >
-    BOOST_CONSTEXPR inline BOOST_DEDUCED_TYPENAME range_iterator<C>::type
+    inline BOOST_DEDUCED_TYPENAME range_iterator<C>::type
     range_begin( C& c )
     {
         //
@@ -50,13 +52,13 @@ namespace range_detail
     //////////////////////////////////////////////////////////////////////
 
     template< typename Iterator >
-    BOOST_CONSTEXPR inline Iterator range_begin( const std::pair<Iterator,Iterator>& p )
+    inline Iterator range_begin( const std::pair<Iterator,Iterator>& p )
     {
         return p.first;
     }
 
     template< typename Iterator >
-    BOOST_CONSTEXPR inline Iterator range_begin( std::pair<Iterator,Iterator>& p )
+    inline Iterator range_begin( std::pair<Iterator,Iterator>& p )
     {
         return p.first;
     }
@@ -69,19 +71,19 @@ namespace range_detail
     // May this be discarded? Or is it needed for bad compilers?
     //
     template< typename T, std::size_t sz >
-    BOOST_CONSTEXPR inline const T* range_begin( const T (&a)[sz] ) BOOST_NOEXCEPT
+    inline const T* range_begin( const T (&a)[sz] )
     {
         return a;
     }
 
     template< typename T, std::size_t sz >
-    BOOST_CONSTEXPR inline T* range_begin( T (&a)[sz] ) BOOST_NOEXCEPT
+    inline T* range_begin( T (&a)[sz] )
     {
         return a;
     }
 
 
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
 } // namespace 'range_detail'
 #endif
 
@@ -92,24 +94,18 @@ namespace range_adl_barrier
 {
 
 template< class T >
-#if !BOOST_WORKAROUND(BOOST_GCC, < 40700)
-BOOST_CONSTEXPR
-#endif
 inline BOOST_DEDUCED_TYPENAME range_iterator<T>::type begin( T& r )
 {
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
     using namespace range_detail;
 #endif
     return range_begin( r );
 }
 
 template< class T >
-#if !BOOST_WORKAROUND(BOOST_GCC, < 40700)
-BOOST_CONSTEXPR
-#endif
 inline BOOST_DEDUCED_TYPENAME range_iterator<const T>::type begin( const T& r )
 {
-#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
     using namespace range_detail;
 #endif
     return range_begin( r );
@@ -117,6 +113,8 @@ inline BOOST_DEDUCED_TYPENAME range_iterator<const T>::type begin( const T& r )
 
     } // namespace range_adl_barrier
 } // namespace mars_boost
+
+#endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {

@@ -22,20 +22,12 @@
     #pragma warning( disable : 4996 )
 #endif
 
-#include <algorithm>
 #include <boost/assert.hpp>
-#include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_traits.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
-#include <boost/next_prior.hpp>
-#include <boost/range/algorithm/equal.hpp>
-#include <boost/range/detail/safe_bool.hpp>
-#include <boost/range/difference_type.hpp>
-#include <boost/range/functions.hpp>
-#include <boost/range/has_range_iterator.hpp>
-#include <boost/range/iterator.hpp>
 #include <boost/type_traits/is_abstract.hpp>
 #include <boost/type_traits/is_array.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
@@ -43,9 +35,16 @@
 #include <boost/type_traits/is_function.hpp>
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/range/functions.hpp>
+#include <boost/range/iterator.hpp>
+#include <boost/range/difference_type.hpp>
+#include <boost/range/has_range_iterator.hpp>
+#include <boost/range/algorithm/equal.hpp>
+#include <boost/range/detail/safe_bool.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <cstddef>
 #include <iterator>
+#include <algorithm>
+#include <cstddef>
 
 /*! \file
     Defines the \c iterator_class and related functions.
@@ -321,7 +320,7 @@ public:
     reference back() const
     {
         BOOST_ASSERT(!this->empty());
-        return *mars_boost::prior(this->m_End);
+        return *boost::prior(this->m_End);
     }
 
     void drop_back()
@@ -488,7 +487,7 @@ public:
             template<class SinglePassRange>
             iterator_range(
                 const SinglePassRange& r,
-                BOOST_DEDUCED_TYPENAME ::mars_boost::enable_if<
+                BOOST_DEDUCED_TYPENAME ::boost::enable_if<
                     is_compatible_range<const SinglePassRange>
                 >::type* = 0
             )
@@ -499,7 +498,7 @@ public:
             template<class SinglePassRange>
             iterator_range(
                 SinglePassRange& r,
-                BOOST_DEDUCED_TYPENAME ::mars_boost::enable_if<
+                BOOST_DEDUCED_TYPENAME ::boost::enable_if<
                     is_compatible_range<SinglePassRange>
                 >::type* = 0
             )
@@ -589,17 +588,17 @@ public:
 
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator!=( const ForwardRange& l, const iterator_range<IteratorT>& r )
         {
-            return !mars_boost::equal( l, r );
+            return !boost::equal( l, r );
         }
 
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator<( const ForwardRange& l, const iterator_range<IteratorT>& r )
@@ -609,7 +608,7 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator<=( const ForwardRange& l, const iterator_range<IteratorT>& r )
@@ -619,7 +618,7 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator>( const ForwardRange& l, const iterator_range<IteratorT>& r )
@@ -629,7 +628,7 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator>=( const ForwardRange& l, const iterator_range<IteratorT>& r )
@@ -637,6 +636,8 @@ public:
             return iterator_range_detail::greater_or_equal_than( l, r );
         }
 
+#ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+#else
         template< class Iterator1T, class Iterator2T >
         inline bool
         operator==( const iterator_range<Iterator1T>& l, const iterator_range<Iterator2T>& r )
@@ -646,7 +647,7 @@ public:
 
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator==( const iterator_range<IteratorT>& l, const ForwardRange& r )
@@ -659,17 +660,17 @@ public:
         inline bool
         operator!=( const iterator_range<Iterator1T>& l, const iterator_range<Iterator2T>& r )
         {
-            return !mars_boost::equal( l, r );
+            return !boost::equal( l, r );
         }
 
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator!=( const iterator_range<IteratorT>& l, const ForwardRange& r )
         {
-            return !mars_boost::equal( l, r );
+            return !boost::equal( l, r );
         }
 
 
@@ -682,7 +683,7 @@ public:
 
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator<( const iterator_range<IteratorT>& l, const ForwardRange& r )
@@ -699,7 +700,7 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator<=( const iterator_range<IteratorT>& l, const ForwardRange& r )
@@ -716,7 +717,7 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator>( const iterator_range<IteratorT>& l, const ForwardRange& r )
@@ -733,13 +734,15 @@ public:
         
         template< class IteratorT, class ForwardRange >
         inline BOOST_DEDUCED_TYPENAME mars_boost::enable_if<
-            mpl::not_<mars_boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
+            mpl::not_<boost::is_base_and_derived<iterator_range_detail::iterator_range_tag, ForwardRange> >,
             bool
         >::type
         operator>=( const iterator_range<IteratorT>& l, const ForwardRange& r )
         {
             return iterator_range_detail::greater_or_equal_than( l, r );
         }
+
+#endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
 
 //  iterator range utilities -----------------------------------------//
 
@@ -765,6 +768,17 @@ public:
             return iterator_range<IteratorT>(first, mars_boost::next(first, n));
         }
 
+#ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+
+        template< typename Range >
+        inline iterator_range< BOOST_DEDUCED_TYPENAME range_iterator<Range>::type >
+        make_iterator_range( Range& r )
+        {
+            return iterator_range< BOOST_DEDUCED_TYPENAME range_iterator<Range>::type >
+                ( mars_boost::begin( r ), mars_boost::end( r ) );
+        }
+
+#else
         //! iterator_range construct helper
         /*!
             Construct an \c iterator_range from a \c Range containing the begin
@@ -785,6 +799,8 @@ public:
            return iterator_range< BOOST_DEDUCED_TYPENAME range_iterator<const ForwardRange>::type >
                 ( r, iterator_range_detail::const_range_tag() );
         }
+
+#endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
 
         namespace iterator_range_detail
         {
@@ -810,6 +826,19 @@ public:
             }
         }
 
+#ifdef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
+
+        template< class Range >
+        inline iterator_range< BOOST_DEDUCED_TYPENAME range_iterator<Range>::type >
+        make_iterator_range( Range& r,
+                    BOOST_DEDUCED_TYPENAME range_difference<Range>::type advance_begin,
+                    BOOST_DEDUCED_TYPENAME range_difference<Range>::type advance_end )
+        {
+            return iterator_range_detail::make_range_impl( r, advance_begin, advance_end );
+        }
+
+#else
+
         template< class Range >
         inline iterator_range< BOOST_DEDUCED_TYPENAME range_iterator<Range>::type >
         make_iterator_range( Range& r,
@@ -827,6 +856,8 @@ public:
         {
             return iterator_range_detail::make_range_impl( r, advance_begin, advance_end );
         }
+
+#endif // BOOST_NO_FUNCTION_TEMPLATE_ORDERING
 
         //! copy a range into a sequence
         /*!

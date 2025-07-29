@@ -66,7 +66,6 @@
  *                                                     *
  *******************************************************/
 
-.file "make_ppc64_sysv_elf_gas.S"
 .globl make_fcontext
 #if _CALL_ELF == 2
 	.text
@@ -125,10 +124,10 @@ make_fcontext:
     li   %r0, 0
     std  %r0, 184(%r3)
 
-#if _CALL_ELF != 2
-    # zero in r3 indicates first jump to context-function
-    std  %r0, 152(%r3)
-#endif
+    # compute address of returned transfer_t
+    addi %r0, %r3, 232
+    mr   %r4, %r0
+    std  %r4, 152(%r3)
 
     # load LR
     mflr  %r0

@@ -8,24 +8,23 @@ http://www.boost.org/LICENSE_1_0.txt)
 #ifndef BOOST_PREDEF_COMPILER_HP_ACC_H
 #define BOOST_PREDEF_COMPILER_HP_ACC_H
 
-#include <boost/predef/make.h>
 #include <boost/predef/version_number.h>
+#include <boost/predef/make.h>
 
-/* tag::reference[]
-= `BOOST_COMP_HPACC`
+/*`
+[heading `BOOST_COMP_HPACC`]
 
-HP a{CPP} compiler.
+HP aC++ compiler.
 Version number available as major, minor, and patch.
 
-[options="header"]
-|===
-| {predef_symbol} | {predef_version}
+[table
+    [[__predef_symbol__] [__predef_version__]]
 
-| `+__HP_aCC+` | {predef_detection}
+    [[`__HP_aCC`] [__predef_detection__]]
 
-| `+__HP_aCC+` | V.R.P
-|===
-*/ // end::reference[]
+    [[`__HP_aCC`] [V.R.P]]
+    ]
+ */
 
 #define BOOST_COMP_HPACC BOOST_VERSION_NUMBER_NOT_AVAILABLE
 

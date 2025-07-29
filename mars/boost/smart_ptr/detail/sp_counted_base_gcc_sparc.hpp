@@ -19,21 +19,10 @@
 //
 //  Thanks to Michael van der Westhuizen
 
-#include <boost/config.hpp>
-#include <boost/smart_ptr/detail/sp_obsolete.hpp>
-#include <boost/smart_ptr/detail/sp_typeinfo_.hpp>
+#include <boost/detail/sp_typeinfo.hpp>
 #include <inttypes.h> // int32_t
 
-#if defined(BOOST_SP_REPORT_IMPLEMENTATION)
-
-#include <boost/config/pragma_message.hpp>
-BOOST_PRAGMA_MESSAGE("Using g++/Sparc sp_counted_base")
-
-#endif
-
-BOOST_SP_OBSOLETE()
-
-namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
+namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost 
 {
 
 namespace detail
@@ -98,7 +87,7 @@ inline int32_t atomic_conditional_increment( int32_t * pw )
     }    
 }
 
-class BOOST_SYMBOL_VISIBLE sp_counted_base
+class sp_counted_base
 {
 private:
 
@@ -130,8 +119,7 @@ public:
         delete this;
     }
 
-    virtual void * get_deleter( sp_typeinfo_ const & ti ) = 0;
-    virtual void * get_local_deleter( sp_typeinfo_ const & ti ) = 0;
+    virtual void * get_deleter( sp_typeinfo const & ti ) = 0;
     virtual void * get_untyped_deleter() = 0;
 
     void add_ref_copy()
@@ -174,6 +162,6 @@ public:
 
 } // namespace detail
 
-} // namespace mars_boost
+} // namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 
 #endif  // #ifndef BOOST_SMART_PTR_DETAIL_SP_COUNTED_BASE_GCC_SPARC_HPP_INCLUDED

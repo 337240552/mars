@@ -21,13 +21,6 @@
 # include <ia64intrin.h>
 #endif
 
-#if defined(BOOST_SP_REPORT_IMPLEMENTATION)
-
-#include <boost/config/pragma_message.hpp>
-BOOST_PRAGMA_MESSAGE("Using __sync spinlock")
-
-#endif
-
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
 
@@ -38,7 +31,7 @@ class spinlock
 {
 public:
 
-    unsigned char v_;
+    int v_;
 
 public:
 
@@ -87,7 +80,7 @@ public:
 };
 
 } // namespace detail
-} // namespace mars_boost
+} // namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 
 #define BOOST_DETAIL_SPINLOCK_INIT {0}
 

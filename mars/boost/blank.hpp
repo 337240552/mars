@@ -16,11 +16,11 @@
 #include "boost/blank_fwd.hpp"
 
 #if !defined(BOOST_NO_IOSTREAM)
-#include "boost/detail/templated_streams.hpp"
 #include <iosfwd> // for std::basic_ostream forward declare
+#include "boost/detail/templated_streams.hpp"
 #endif // BOOST_NO_IOSTREAM
 
-#include "boost/type_traits/integral_constant.hpp"
+#include "boost/mpl/bool.hpp"
 #include "boost/type_traits/is_empty.hpp"
 #include "boost/type_traits/is_pod.hpp"
 #include "boost/type_traits/is_stateless.hpp"
@@ -36,19 +36,19 @@ struct blank
 
 template <>
 struct is_pod< blank >
-    : mars_boost::true_type
+    : mpl::true_
 {
 };
 
 template <>
 struct is_empty< blank >
-    : mars_boost::true_type
+    : mpl::true_
 {
 };
 
 template <>
 struct is_stateless< blank >
-    : mars_boost::true_type
+    : mpl::true_
 {
 };
 

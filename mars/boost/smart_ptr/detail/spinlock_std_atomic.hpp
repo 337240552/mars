@@ -15,16 +15,8 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <atomic>
-#include <boost/config.hpp>
 #include <boost/smart_ptr/detail/yield_k.hpp>
-
-#if defined(BOOST_SP_REPORT_IMPLEMENTATION)
-
-#include <boost/config/pragma_message.hpp>
-BOOST_PRAGMA_MESSAGE("Using std::atomic spinlock")
-
-#endif
+#include <atomic>
 
 namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 {
@@ -40,12 +32,12 @@ public:
 
 public:
 
-    bool try_lock() BOOST_NOEXCEPT
+    bool try_lock()
     {
         return !v_.test_and_set( std::memory_order_acquire );
     }
 
-    void lock() BOOST_NOEXCEPT
+    void lock()
     {
         for( unsigned k = 0; !try_lock(); ++k )
         {
@@ -53,7 +45,7 @@ public:
         }
     }
 
-    void unlock() BOOST_NOEXCEPT
+    void unlock()
     {
         v_ .clear( std::memory_order_release );
     }
@@ -71,12 +63,12 @@ public:
 
     public:
 
-        explicit scoped_lock( spinlock & sp ) BOOST_NOEXCEPT: sp_( sp )
+        explicit scoped_lock( spinlock & sp ): sp_( sp )
         {
             sp.lock();
         }
 
-        ~scoped_lock() /*BOOST_NOEXCEPT*/
+        ~scoped_lock()
         {
             sp_.unlock();
         }
@@ -84,7 +76,7 @@ public:
 };
 
 } // namespace detail
-} // namespace mars_boost
+} // namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost
 
 #define BOOST_DETAIL_SPINLOCK_INIT { ATOMIC_FLAG_INIT }
 

@@ -31,6 +31,7 @@ time2_demo contained this comment:
 #define BOOST_CHRONO_TIME_POINT_HPP
 
 #include <boost/chrono/duration.hpp>
+#include <iostream>
 
 #ifndef BOOST_CHRONO_HEADER_ONLY
 // this must occur after all of the includes and before any code appears:
@@ -182,7 +183,7 @@ namespace chrono {
                 , typename mars_boost::enable_if
                 <
                     mars_boost::is_convertible<Duration2, duration>
-                >::type* = BOOST_NULLPTR
+                >::type* = 0
         )
             : d_(t.time_since_epoch())
         {

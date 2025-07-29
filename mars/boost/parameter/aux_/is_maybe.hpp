@@ -1,52 +1,26 @@
-// Copyright Daniel Wallin, David Abrahams 2010.
-// Distributed under the Boost Software License, Version 1.0.
-// (See accompanying file LICENSE_1_0.txt or copy at
+// Copyright Daniel Wallin, David Abrahams 2010. Use, modification and
+// distribution is subject to the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_PARAMETER_IS_MAYBE_050329_HPP
 #define BOOST_PARAMETER_IS_MAYBE_050329_HPP
 
-namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost { namespace parameter { namespace aux {
+#include <boost/type_traits/is_base_and_derived.hpp>
 
-    struct maybe_base
-    {
-    };
-}}} // namespace mars_boost::parameter::aux
+namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost {
+namespace parameter {
+namespace aux {
 
-#if defined(BOOST_PARAMETER_CAN_USE_MP11)
-#include <type_traits>
+struct maybe_base {};
 
-namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost { namespace parameter { namespace aux {
+template <class T>
+struct is_maybe
+  : is_base_and_derived<maybe_base, T>
+{};
 
-    template <typename T>
-    using is_maybe = ::std::is_base_of<
-        ::mars_boost::parameter::aux::maybe_base
-      , typename ::std::remove_const<T>::type
-    >;
-}}} // namespace mars_boost::parameter::aux
+} // namespace aux
+} // namespace parameter
+} // namespace mars_boost
 
-#else   // !defined(BOOST_PARAMETER_CAN_USE_MP11)
-#include <boost/mpl/bool.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/type_traits/is_base_of.hpp>
-#include <boost/type_traits/remove_const.hpp>
-
-namespace mars_boost {} namespace boost = mars_boost; namespace mars_boost { namespace parameter { namespace aux {
-
-    template <typename T>
-    struct is_maybe
-      : ::mars_boost::mpl::if_<
-            ::mars_boost::is_base_of<
-                ::mars_boost::parameter::aux::maybe_base
-              , typename ::mars_boost::remove_const<T>::type
-            >
-          , ::mars_boost::mpl::true_
-          , ::mars_boost::mpl::false_
-        >::type
-    {
-    };
-}}} // namespace mars_boost::parameter::aux
-
-#endif  // BOOST_PARAMETER_CAN_USE_MP11
-#endif  // include guard
-
+#endif // BOOST_PARAMETER_IS_MAYBE_050329_HPP
